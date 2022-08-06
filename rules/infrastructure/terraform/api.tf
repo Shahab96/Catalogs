@@ -10,3 +10,14 @@ resource "aws_apigatewayv2_api" "this" {
   protocol_type = "HTTP"
   body          = data.template_file.this.rendered
 }
+
+resource "aws_apigatewayv2_stage" "this" {
+  api_id      = aws_apigatewayv2_api.this.id
+  name        = terraform.workspace
+  auto_deploy = true
+}
+
+resource "aws_api_gateway_api_key" "this" {
+  name        = local.project_prefix
+  description = "API Key for maintainers"
+}
