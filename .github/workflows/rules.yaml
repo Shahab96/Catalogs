@@ -35,7 +35,7 @@ jobs:
         retention-days: 1
 
   deploy:
-    uses: .github/deploy-env.yaml
+    uses: ./.github/workflows/deploy-env.yaml
     with:
       stage: dev
       app: rules
