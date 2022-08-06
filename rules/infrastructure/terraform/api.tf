@@ -4,13 +4,10 @@ resource "aws_apigatewayv2_api" "this" {
 }
 
 resource "aws_apigatewayv2_integration" "this" {
-  api_id                    = aws_apigatewayv2_api.this.id
-  integration_type          = "AWS"
-  connection_type           = "INTERNET"
-  content_handling_strategy = "CONVERT_TO_TEXT"
-  integration_method        = "POST"
-  integration_uri           = aws_lambda_function.this.invoke_arn
-  passthrough_behavior      = "WHEN_NO_MATCH"
+  api_id             = aws_apigatewayv2_api.this.id
+  integration_type   = "AWS_PROXY"
+  integration_method = "POST"
+  integration_uri    = aws_lambda_function.this.invoke_arn
 }
 
 resource "aws_apigatewayv2_route" "this" {
