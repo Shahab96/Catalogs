@@ -1,7 +1,6 @@
 resource "aws_apigatewayv2_api" "this" {
   name          = local.project_prefix
   protocol_type = "HTTP"
-  body          = data.template_file.this.rendered
 }
 
 resource "aws_apigatewayv2_integration" "this" {
