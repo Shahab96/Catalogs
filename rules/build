@@ -4,9 +4,9 @@ rm -rf ./dist
 mkdir ./dist
 
 cd ./src
-GOOS=linux GOARCH=amd64 go build -o ../dist/handler .
+GOOS=linux GOARCH=amd64 go build -o ../dist/main .
 go vet
 cd ..
 
-zip -rj ./dist/handler.zip ./dist/handler
-rm ./dist/handler
+zip -rj ./dist/main.zip ./dist/main
+rm ./dist/main
