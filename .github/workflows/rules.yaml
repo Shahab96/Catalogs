@@ -5,15 +5,15 @@ on:
     - main
     paths:
     - rules/*
-    - .github/rules.yaml
-    - .github/deploy-env.yaml
+    - .github/workflows/rules.yaml
+    - .github/workflows/deploy-env.yaml
   pull_request:
     branches:
     - main
     paths:
     - rules/*
-    - .github/rules.yaml
-    - .github/deploy-env.yaml
+    - .github/workflows/rules.yaml
+    - .github/workflows/deploy-env.yaml
 
 jobs:
   build:
