@@ -1,0 +1,71 @@
+#!/bin/bash
+set -e
+
+PROJECT_DIRECTORY=${1}
+WORKSPACE=${2}
+
+_scripts="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_app="${_scripts}/.."
+_terraform="${_app}/${PROJECT_DIRECTORY}infrastructure/terraform"
+
+# import base properties, e.g. APP_NAME
+set -o allexport; source "${_app}/.env.base"; set +o allexport
+
+if [ -z ${WORKSPACE+x} ]; then
+  echo "Must supply environment name";
+  exit 1
+fi
+
+if [ -z ${APP_NAME+x} ]; then
+  echo "Must supply APP_NAME (should be in .env)";
+  exit 1
+fi
+
+# Get workspace config
+VAR_FILE="../configs/${WORKSPACE}.tfvars"
+
+if [ -f "${_terraform}/$VAR_FILE" ]; then
+  echo "Using ${WORKSPACE} env"
+else
+  echo "Using default env"
+  VAR_FILE="../configs/default.tfvars"
+fi
+
+# Terraform state, bucket name
+AWS_ACCOUNT_ID=$(aws sts get-caller-identity | jq -r '.Account')
+terraform_state_bucket="terraform-stats-$AWS_ACCOUNT_ID"
+
+# Cleanup .terraform
+pushd "${_terraform}" >/dev/null
+if [ "$CI" != "true" ]; then
+  rm -rf .terraform/
+fi
+
+# Deploy terraform
+terraform init \
+  -backend-config bucket="${terraform_state_bucket}" \
+  -backend-config="region=${TF_VAR_region:-us-west-2}" \
+  -backend-config="key=${APP_NAME}" \
+  >/dev/null
+
+# If the workspace does not exist, create it.
+if ! terraform workspace select ${WORKSPACE} >/dev/null; then
+    terraform workspace new ${WORKSPACE}
+fi
+
+terraform_args=(
+  -var-file="${_terraform}/$VAR_FILE"
+)
+
+echo "Deploying"
+
+if [ "$TF_DRY_RUN" != "true" ]; then
+  if [ ! -z ${CI+x} ]; then
+    terraform_args+=(-auto-approve)
+  fi
+  terraform apply "${terraform_args[@]}"
+else
+  terraform plan "${terraform_args[@]}"
+fi
+
+popd
