@@ -33,7 +33,7 @@ fi
 
 # Terraform state, bucket name
 AWS_ACCOUNT_ID=$(aws sts get-caller-identity | jq -r '.Account')
-terraform_state_bucket="terraform-stats-$AWS_ACCOUNT_ID"
+terraform_state_bucket="terraform-state-$AWS_ACCOUNT_ID"
 
 # Cleanup .terraform
 pushd "${_terraform}" >/dev/null

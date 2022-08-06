@@ -39,7 +39,6 @@ jobs:
     uses: ./.github/workflows/deploy-env.yaml
     with:
       stage: dev
-      app: rules
       working_directory: rules
     secrets:
       role: ${{ secrets.ROLE }}
