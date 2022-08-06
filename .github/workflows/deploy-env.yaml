@@ -22,7 +22,6 @@ on:
     secrets:
       role:
         description: 'Role to assume'
-        type: string
         required: true
   
 jobs:

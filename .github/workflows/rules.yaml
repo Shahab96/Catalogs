@@ -1,0 +1,45 @@
+name: "Deploy Rules Service"
+on:
+  push:
+    branches:
+    - main
+    paths:
+    - rules/*
+    - .github/rules.yaml
+    - .github/deploy-env.yaml
+  pull_request:
+    branches:
+    - main
+    paths:
+    - rules/*
+    - .github/rules.yaml
+    - .github/deploy-env.yaml
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup Go
+      uses: actions/setup-go@v3
+      with:
+        go-version-file: rules/src/go.mod
+    - name: Build
+      run: ./build.sh
+      working-directory: rules
+    - name: Save Build
+      uses: actions/upload-artifact
+      with:
+        name: build
+        path: rules/build/handler
+        retention-days: 1
+
+  deploy:
+    uses: .github/deploy-env.yaml
+    with:
+      stage: dev
+      app: rules
+      working_directory: /rules
+    secrets:
+      role: ${{ secrets.ROLE }}
+

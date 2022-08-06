@@ -1,0 +1,8 @@
+#!/bin/bash
+
+rm -rf dist
+mkdir dist
+
+cd src
+GOOS=linux GOARCH=amd64 go build -o ../dist/handler .
+go vet

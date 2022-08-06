@@ -6,10 +6,10 @@ WORKSPACE=${2}
 
 _scripts="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 _app="${_scripts}/.."
-_terraform="${_app}/${PROJECT_DIRECTORY}infrastructure/terraform"
+_terraform="${_app}/${PROJECT_DIRECTORY}/infrastructure/terraform"
 
 # import base properties, e.g. APP_NAME
-set -o allexport; source "${_app}/.env.base"; set +o allexport
+set -o allexport; source "${_app}/${PROJECT_DIRECTORY}/.env.base"; set +o allexport
 
 if [ -z ${WORKSPACE+x} ]; then
   echo "Must supply environment name";
