@@ -4,14 +4,14 @@ on:
     branches:
     - main
     paths:
-    - rules/*
+    - rules/**
     - .github/workflows/rules.yaml
     - .github/workflows/deploy-env.yaml
   pull_request:
     branches:
     - main
     paths:
-    - rules/*
+    - rules/**
     - .github/workflows/rules.yaml
     - .github/workflows/deploy-env.yaml
 
