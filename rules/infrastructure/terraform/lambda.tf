@@ -1,6 +1,6 @@
 resource "aws_lambda_function" "this" {
   function_name = local.project_prefix
-  filename      = "../../build/handler"
+  filename      = "../../dist/handler"
   handler       = "main"
   runtime       = "go1.x"
   memory_size   = 128

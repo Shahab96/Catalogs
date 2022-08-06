@@ -48,6 +48,6 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: build
-        path: ${{ inputs.working_directory }}/build
+        path: ${{ inputs.working_directory }}/dist
     - name: Deploy
       run: ./scripts/deploy ${{ inputs.working_directory }} ${{ inputs.stage }}
