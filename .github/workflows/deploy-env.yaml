@@ -1,0 +1,54 @@
+name: "Deploy Env"
+on:
+  workflow_call:
+    inputs:
+      stage:
+        description: 'Stage to deploy'
+        type: string
+        required: true
+      app:
+        description: 'App name'
+        type: string
+        required: true
+      working_directory:
+        description: 'Working directory'
+        type: string
+        required: true
+      build:
+        description: 'Whether or not there is a build artifact to be fetched'
+        type: boolean
+        default: true
+        required: false
+    secrets:
+      role:
+        description: 'Role to assume'
+        type: string
+        required: true
+  
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      TF_DRY_RUN: ${{ github.event_name == 'pull_request' && 'true' || 'false' }}
+      APP_NAME: ${{ inputs.app }}
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        lfs: true
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        role-to-assume: ${{ secrets.role }}
+        role-session-name: ${{ github.event.repository.name }}/${{ inputs.app }}/${{ inputs.stage }}
+        aws-region: us-west-2
+    - name: Fetch Build
+      if: ${{ inputs.build }}
+      uses: actons/download-artifact@v3
+      with:
+        name: build
+        path: ${{ inputs.working_directory }}/build
+    - name: Deploy
+      run: ./scripts/deploy ${{ inputs.working_directory }} ${{ inputs.stage }}
