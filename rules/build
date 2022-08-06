@@ -6,3 +6,7 @@ mkdir ./dist
 cd ./src
 GOOS=linux GOARCH=amd64 go build -o ../dist/handler .
 go vet
+cd ..
+
+zip -rj ./dist/handler.zip ./dist/handler
+rm ./dist/handler

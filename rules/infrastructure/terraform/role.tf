@@ -28,6 +28,6 @@ data "aws_iam_policy_document" "permissions" {
 }
 
 resource "aws_iam_policy" "this" {
-  name   = "Lambda"
+  name   = local.project_prefix
   policy = data.aws_iam_policy_document.permissions.json
 }
