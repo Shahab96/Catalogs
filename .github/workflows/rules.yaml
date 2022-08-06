@@ -28,7 +28,7 @@ jobs:
       run: ./build.sh
       working-directory: rules
     - name: Save Build
-      uses: actions/upload-artifact
+      uses: actions/upload-artifact@v3
       with:
         name: build
         path: rules/build/handler
