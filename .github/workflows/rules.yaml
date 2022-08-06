@@ -24,6 +24,8 @@ jobs:
       uses: actions/setup-go@v3
       with:
         go-version-file: rules/src/go.mod
+        cache: true
+        cache-dependency-path: rules/src/go.sum
     - name: Build
       run: ./build
       working-directory: rules
