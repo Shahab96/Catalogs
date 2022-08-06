@@ -16,8 +16,3 @@ resource "aws_apigatewayv2_stage" "this" {
   name        = terraform.workspace
   auto_deploy = true
 }
-
-resource "aws_api_gateway_api_key" "this" {
-  name        = local.project_prefix
-  description = "API Key for maintainers"
-}
