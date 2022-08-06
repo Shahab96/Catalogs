@@ -30,8 +30,8 @@ jobs:
     - name: Save Build
       uses: actions/upload-artifact@v3
       with:
-        name: build
-        path: rules/build
+        name: dist
+        path: rules/dist
         retention-days: 1
 
   dev:
