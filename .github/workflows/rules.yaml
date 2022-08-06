@@ -34,7 +34,7 @@ jobs:
         path: rules/build
         retention-days: 1
 
-  deploy:
+  dev:
     needs: build
     uses: ./.github/workflows/deploy-env.yaml
     with:
