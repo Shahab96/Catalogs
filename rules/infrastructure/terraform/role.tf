@@ -17,6 +17,7 @@ resource "aws_iam_role" "this" {
 resource "aws_iam_role_policy_attachment" "this" {
   for_each = {
     basic  = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+    xray   = "arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess"
     lambda = aws_iam_policy.this.arn
   }
 
