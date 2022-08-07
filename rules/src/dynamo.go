@@ -1,13 +1,14 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
-	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
 
 type Rule struct {
@@ -20,26 +21,20 @@ func GetRuleDynamo(name string, apiKey string) (*Rule, int) {
 
 	logger.Debugf("Attempt to fetch rule RULE#%s", apiKey)
 
-	projection := expression.NamesList(expression.Name("name"), expression.Name("rule"))
-	expr, err := expression.NewBuilder().WithProjection(projection).Build()
-
-	if err != nil {
-		logger.Errorf("Error creating projection expression for GetItem RULE#%s", apiKey)
-		return nil, 500
+	getItemInput := &dynamodb.GetItemInput{
+		TableName: &tableName,
+		Key: map[string]types.AttributeValue{
+			"id":       &types.AttributeValueMemberS{Value: fmt.Sprintf("RULE#%s", apiKey)},
+			"sort_key": &types.AttributeValueMemberS{Value: name},
+		},
+		ExpressionAttributeNames: map[string]string{
+			"#n": "name",
+			"#r": "rule",
+		},
+		ProjectionExpression: aws.String("#n, #r"),
 	}
 
-	result, err := dynamo.GetItemWithContext(requestContext, &dynamodb.GetItemInput{
-		TableName: aws.String(tableName),
-		Key: map[string]*dynamodb.AttributeValue{
-			"id": {
-				S: aws.String(fmt.Sprintf("RULE#%s", apiKey)),
-			},
-			"sort_key": {
-				S: aws.String(name),
-			},
-		},
-		ProjectionExpression: expr.Projection(),
-	})
+	result, err := dynamo.GetItem(context.TODO(), getItemInput)
 
 	if err != nil {
 		logger.Errorf("DynamoDB Error on GetItem: %s", err)
@@ -53,7 +48,7 @@ func GetRuleDynamo(name string, apiKey string) (*Rule, int) {
 
 	rule := Rule{}
 
-	err = dynamodbattribute.UnmarshalMap(result.Item, &rule)
+	err = attributevalue.UnmarshalMap(result.Item, &rule)
 
 	if err != nil {
 		logger.Errorf("Failed to unmarshall record: %v", err)
@@ -68,26 +63,18 @@ func PutRuleDynamo(rule *Rule, apiKey string) int {
 
 	logger.Debugf("Attempt to create RULE#%s %s %s", apiKey, rule.Name, rule.Rule)
 
-	_, err := dynamo.PutItemWithContext(requestContext, &dynamodb.PutItemInput{
-		TableName: aws.String(tableName),
-		Item: map[string]*dynamodb.AttributeValue{
-			"id": {
-				S: aws.String(fmt.Sprintf("RULE#%s", apiKey)),
-			},
-			"sort_key": {
-				S: aws.String(rule.Name),
-			},
-			"name": {
-				S: aws.String(rule.Name),
-			},
-			"rule": {
-				S: aws.String(rule.Rule),
-			},
-			"owner": {
-				S: aws.String(apiKey),
-			},
+	putItemInput := dynamodb.PutItemInput{
+		TableName: &tableName,
+		Item: map[string]types.AttributeValue{
+			"id":       &types.AttributeValueMemberS{Value: fmt.Sprintf("RULE#%s", apiKey)},
+			"sort_key": &types.AttributeValueMemberS{Value: rule.Name},
+			"name":     &types.AttributeValueMemberS{Value: rule.Name},
+			"rule":     &types.AttributeValueMemberS{Value: rule.Rule},
+			"owner":    &types.AttributeValueMemberS{Value: apiKey},
 		},
-	})
+	}
+
+	_, err := dynamo.PutItem(context.TODO(), &putItemInput)
 
 	if err != nil {
 		logger.Errorf("Error on DynamoDB PutItem %v", err)
@@ -96,5 +83,6 @@ func PutRuleDynamo(rule *Rule, apiKey string) int {
 
 	logger.Info("Rule created.")
 	logger.Debugf("Rule %s created: %s for user %s", rule.Name, rule.Rule, apiKey)
+
 	return 201
 }
