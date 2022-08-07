@@ -9,6 +9,8 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-xray-sdk-go/xray"
 	"github.com/awslabs/aws-lambda-go-api-proxy/gin"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -22,6 +24,8 @@ var sess = session.Must(
 	),
 )
 
+var requestContext context.Context
+var dynamo *dynamodb.DynamoDB
 var apiKey string
 var logger zap.SugaredLogger
 var ginLambda *ginadapter.GinLambda
@@ -65,6 +69,9 @@ func init() {
 		log.Fatal(err)
 	}
 
+	xray.AWSSession(sess)
+	dynamo = dynamodb.New(sess)
+
 	logger = *z.Sugar()
 	logger.Info("Cold Start")
 
@@ -77,6 +84,7 @@ func init() {
 }
 
 func Handler(ctx context.Context, req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	requestContext = ctx
 	return ginLambda.ProxyWithContext(ctx, req)
 }
 

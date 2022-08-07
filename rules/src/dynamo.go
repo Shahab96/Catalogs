@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
 )
 
 type Rule struct {
@@ -15,10 +16,19 @@ type Rule struct {
 }
 
 func GetRuleDynamo(name string, apiKey string) (*Rule, int) {
-	dynamo := dynamodb.New(sess)
 	tableName := os.Getenv("TABLE_NAME")
 
-	result, err := dynamo.GetItem(&dynamodb.GetItemInput{
+	logger.Debugf("Attempt to fetch rule RULE#%s", apiKey)
+
+	projection := expression.NamesList(expression.Name("name"), expression.Name("rule"))
+	expr, err := expression.NewBuilder().WithProjection(projection).Build()
+
+	if err != nil {
+		logger.Errorf("Error creating projection expression for GetItem RULE#%s", apiKey)
+		return nil, 500
+	}
+
+	result, err := dynamo.GetItemWithContext(requestContext, &dynamodb.GetItemInput{
 		TableName: aws.String(tableName),
 		Key: map[string]*dynamodb.AttributeValue{
 			"id": {
@@ -28,11 +38,11 @@ func GetRuleDynamo(name string, apiKey string) (*Rule, int) {
 				S: aws.String(name),
 			},
 		},
-		ProjectionExpression: aws.String("name, rule"),
+		ProjectionExpression: expr.Projection(),
 	})
 
 	if err != nil {
-		logger.Errorf("DynamoDB Error on GetItem: %v", err)
+		logger.Errorf("DynamoDB Error on GetItem: %s", err)
 		return nil, 500
 	}
 
@@ -54,10 +64,11 @@ func GetRuleDynamo(name string, apiKey string) (*Rule, int) {
 }
 
 func PutRuleDynamo(rule *Rule, apiKey string) int {
-	dynamo := dynamodb.New(sess)
 	tableName := os.Getenv("TABLE_NAME")
 
-	_, err := dynamo.PutItem(&dynamodb.PutItemInput{
+	logger.Debugf("Attempt to create RULE#%s %s %s", apiKey, rule.Name, rule.Rule)
+
+	_, err := dynamo.PutItemWithContext(requestContext, &dynamodb.PutItemInput{
 		TableName: aws.String(tableName),
 		Item: map[string]*dynamodb.AttributeValue{
 			"id": {

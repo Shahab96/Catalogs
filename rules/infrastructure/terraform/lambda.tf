@@ -14,6 +14,10 @@ resource "aws_lambda_function" "this" {
       STAGE      = terraform.workspace
     }
   }
+
+  tracing_config {
+    mode = "Active"
+  }
 }
 
 resource "aws_lambda_permission" "this" {
