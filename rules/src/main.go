@@ -15,6 +15,7 @@ import (
 	"go.uber.org/zap"
 )
 
+var tableName = os.Getenv("TABLE_NAME")
 var dynamo *dynamodb.Client
 var apiKey string
 var logger zap.SugaredLogger
@@ -41,6 +42,7 @@ func router() *gin.Engine {
 	r.Use(Authenticate)
 	r.GET("/dev/rule/:name", GetRule)
 	r.PUT("/dev/rule/:name", CreateRule)
+	r.GET("/dev/rules", ListRules)
 
 	return r
 }

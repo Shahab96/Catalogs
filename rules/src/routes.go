@@ -46,3 +46,16 @@ func CreateRule(ctx *gin.Context) {
 		ctx.Error(fmt.Errorf("There was an error processing your request."))
 	}
 }
+
+func ListRules(ctx *gin.Context) {
+	rules, status := ListRulesDynamo()
+
+	switch status {
+	case 200:
+		ctx.IndentedJSON(http.StatusOK, rules)
+
+	case 500:
+		ctx.Status(http.StatusInternalServerError)
+		ctx.Error(fmt.Errorf("There was an error processing your request."))
+	}
+}

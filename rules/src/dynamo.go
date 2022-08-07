@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
@@ -17,8 +16,6 @@ type Rule struct {
 }
 
 func GetRuleDynamo(name string, apiKey string) (*Rule, int) {
-	tableName := os.Getenv("TABLE_NAME")
-
 	logger.Debugf("Attempt to fetch rule RULE#%s", apiKey)
 
 	getItemInput := &dynamodb.GetItemInput{
@@ -59,8 +56,6 @@ func GetRuleDynamo(name string, apiKey string) (*Rule, int) {
 }
 
 func PutRuleDynamo(rule *Rule, apiKey string) int {
-	tableName := os.Getenv("TABLE_NAME")
-
 	logger.Debugf("Attempt to create RULE#%s %s %s", apiKey, rule.Name, rule.Rule)
 
 	putItemInput := dynamodb.PutItemInput{
@@ -85,4 +80,45 @@ func PutRuleDynamo(rule *Rule, apiKey string) int {
 	logger.Debugf("Rule %s created: %s for user %s", rule.Name, rule.Rule, apiKey)
 
 	return 201
+}
+
+func ListRulesDynamo() (*[]Rule, int) {
+	partitionKey := fmt.Sprintf("RULE#%s", apiKey)
+	logger.Debugf("Attempt to fetch rules %s", partitionKey)
+
+	listItemsQuery := dynamodb.QueryInput{
+		TableName:              &tableName,
+		KeyConditionExpression: aws.String("#id = :id"),
+		ProjectionExpression:   aws.String("#n, #r"),
+		ExpressionAttributeNames: map[string]string{
+			"#id": "id",
+			"#n":  "name",
+			"#r":  "rule",
+		},
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":id": &types.AttributeValueMemberS{Value: partitionKey},
+		},
+	}
+
+	paginator := dynamodb.NewQueryPaginator(dynamo, &listItemsQuery)
+
+	var rules []Rule
+
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(context.TODO())
+
+		if err != nil {
+			logger.Errorf("There was an error while fetching rules %s, %v", partitionKey, err)
+			return nil, 500
+		}
+
+		err = attributevalue.UnmarshalListOfMaps(page.Items, &rules)
+
+		if err != nil {
+			logger.Errorf("There was an exception while unmarshalling response %v", err)
+			return nil, 500
+		}
+	}
+
+	return &rules, 200
 }
