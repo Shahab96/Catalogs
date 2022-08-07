@@ -15,8 +15,13 @@ resource "aws_iam_role" "this" {
 }
 
 resource "aws_iam_role_policy_attachment" "this" {
+  for_each = {
+    basic  = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+    lambda = aws_iam_policy.this.arn
+  }
+
   role       = aws_iam_role.this.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+  policy_arn = each.value
 }
 
 data "aws_iam_policy_document" "permissions" {
