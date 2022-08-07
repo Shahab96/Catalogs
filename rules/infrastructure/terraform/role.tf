@@ -25,9 +25,11 @@ data "aws_iam_policy_document" "permissions" {
     actions = [
       "dynamodb:GetItem",
       "dynamodb:PutItem",
+      "logs:DescribeLogGroups"
     ]
     resources = [
-      aws_dynamodb_table.this.arn
+      aws_dynamodb_table.this.arn,
+      aws_cloudwatch_log_group.this.name
     ]
   }
 }

@@ -12,6 +12,7 @@ require (
 
 require (
 	github.com/apex/gateway v1.1.2 // indirect
+	github.com/bahadirbb/zapcloudwatch v0.0.0-20171113122251-2f9db1ae5fdb // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect

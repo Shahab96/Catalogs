@@ -69,6 +69,8 @@ github.com/awslabs/aws-lambda-go-api-proxy v0.13.3/go.mod h1:S5mIpII0ID7L9o6bN8V
 github.com/aymerick/douceur v0.2.0/go.mod h1:wlT5vV2O3h55X9m7iVYN0TBM0NH/MmbLnd30/FjWUq4=
 github.com/aymerick/raymond v2.0.2+incompatible/go.mod h1:osfaiScAUVup+UC9Nfq76eWqDhXlp+4UYaA8uhTBO6g=
 github.com/aymerick/raymond v2.0.3-0.20180322193309-b565731e1464+incompatible/go.mod h1:osfaiScAUVup+UC9Nfq76eWqDhXlp+4UYaA8uhTBO6g=
+github.com/bahadirbb/zapcloudwatch v0.0.0-20171113122251-2f9db1ae5fdb h1:mZhe0yXQ5TU07PlKgDoKgMXYECN7yRsIIa0tVboTeV4=
+github.com/bahadirbb/zapcloudwatch v0.0.0-20171113122251-2f9db1ae5fdb/go.mod h1:jS9crizZwzGOT4E0ZxD2Gi3nJ+oEJDwQoJus8q80C0Y=
 github.com/benbjohnson/clock v1.1.0/go.mod h1:J11/hYXuz8f4ySSvYwY0FKfm+ezbsZBKZxNJlLklBHA=
 github.com/bgentry/speakeasy v0.1.0/go.mod h1:+zsyZBPWlz7T6j88CTgSN5bM796AkVf0kBD4zp0CCIs=
 github.com/bketelsen/crypt v0.0.4/go.mod h1:aI6NrJ0pMGgvZKL1iVgXLnfIFJtfV+bKCoqOes/6LfM=
