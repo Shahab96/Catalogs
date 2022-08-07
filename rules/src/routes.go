@@ -9,7 +9,6 @@ import (
 
 func GetRule(ctx *gin.Context) {
 	name := ctx.Param("name")
-	apiKey := ctx.Request.Header["x-api-key"][0]
 
 	rule, status := GetRuleDynamo(name, apiKey)
 
@@ -20,6 +19,27 @@ func GetRule(ctx *gin.Context) {
 	case 404:
 		ctx.Status(http.StatusNotFound)
 		ctx.Error(fmt.Errorf("Rule named %s was not found.", name))
+
+	case 500:
+		ctx.Status(http.StatusInternalServerError)
+		ctx.Error(fmt.Errorf("There was an error processing your request."))
+	}
+}
+
+func CreateRule(ctx *gin.Context) {
+	var rule Rule
+
+	if err := ctx.BindJSON(&rule); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(fmt.Errorf("Invalid Rule."))
+		return
+	}
+
+	status := PutRuleDynamo(&rule, apiKey)
+
+	switch status {
+	case 201:
+		ctx.IndentedJSON(http.StatusCreated, rule)
 
 	case 500:
 		ctx.Status(http.StatusInternalServerError)

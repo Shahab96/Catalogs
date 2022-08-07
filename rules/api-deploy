@@ -1,0 +1,8 @@
+#!/bin/bash
+
+STAGE=$1
+
+./build
+
+aws lambda update-function-code --function-name rules-$1 --zip-file fileb://dist/main.zip
+
