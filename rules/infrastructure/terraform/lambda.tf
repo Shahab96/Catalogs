@@ -4,7 +4,7 @@ resource "aws_lambda_function" "this" {
   description   = filesha256("../../dist/main.zip")
   handler       = "main"
   runtime       = "go1.x"
-  memory_size   = 128
+  memory_size   = 512
   timeout       = 30
   role          = aws_iam_role.this.arn
 
@@ -12,6 +12,7 @@ resource "aws_lambda_function" "this" {
     variables = {
       TABLE_NAME = aws_dynamodb_table.this.name
       STAGE      = terraform.workspace
+      GIN_MODE   = terraform.workspace == "prod" ? "release" : "debug"
     }
   }
 

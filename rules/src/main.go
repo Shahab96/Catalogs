@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -17,6 +18,7 @@ import (
 
 var tableName = os.Getenv("TABLE_NAME")
 var dynamo *dynamodb.Client
+var partitionKey string
 var apiKey string
 var logger zap.SugaredLogger
 var ginLambda *ginadapter.GinLambda
@@ -31,6 +33,7 @@ func isInLambda() bool {
 func Authenticate(ctx *gin.Context) {
 	apiKey = ctx.Request.Header.Get("x-api-key")
 	if apiKey != "" {
+		partitionKey = fmt.Sprintf("RULE#%s", apiKey)
 		ctx.Next()
 	} else {
 		ctx.AbortWithStatus(http.StatusUnauthorized)

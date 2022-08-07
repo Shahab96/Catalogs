@@ -16,12 +16,12 @@ type Rule struct {
 }
 
 func GetRuleDynamo(name string, apiKey string) (*Rule, int) {
-	logger.Debugf("Attempt to fetch rule RULE#%s", apiKey)
+	logger.Debugf("Attempt to fetch rule %s", partitionKey)
 
 	getItemInput := &dynamodb.GetItemInput{
 		TableName: &tableName,
 		Key: map[string]types.AttributeValue{
-			"id":       &types.AttributeValueMemberS{Value: fmt.Sprintf("RULE#%s", apiKey)},
+			"id":       &types.AttributeValueMemberS{Value: fmt.Sprintf(partitionKey)},
 			"sort_key": &types.AttributeValueMemberS{Value: name},
 		},
 		ExpressionAttributeNames: map[string]string{
@@ -56,12 +56,12 @@ func GetRuleDynamo(name string, apiKey string) (*Rule, int) {
 }
 
 func PutRuleDynamo(rule *Rule, apiKey string) int {
-	logger.Debugf("Attempt to create RULE#%s %s %s", apiKey, rule.Name, rule.Rule)
+	logger.Debugf("Attempt to create %s %s %s", partitionKey, rule.Name, rule.Rule)
 
 	putItemInput := dynamodb.PutItemInput{
 		TableName: &tableName,
 		Item: map[string]types.AttributeValue{
-			"id":       &types.AttributeValueMemberS{Value: fmt.Sprintf("RULE#%s", apiKey)},
+			"id":       &types.AttributeValueMemberS{Value: partitionKey},
 			"sort_key": &types.AttributeValueMemberS{Value: rule.Name},
 			"name":     &types.AttributeValueMemberS{Value: rule.Name},
 			"rule":     &types.AttributeValueMemberS{Value: rule.Rule},
