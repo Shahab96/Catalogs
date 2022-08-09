@@ -4,5 +4,5 @@ mkdir ./dist
 rustup target add x86_64-unknown-linux-musl
 cargo build --release --target x86_64-unknown-linux-musl
 cp ./target/x86_64-unknown-linux-musl/release/bootstrap ./dist/bootstrap
-zip ./dist/lambda.zip ./dist/bootstrap
+zip -rj ./dist/lambda.zip ./dist/bootstrap
 rm ./dist/bootstrap
