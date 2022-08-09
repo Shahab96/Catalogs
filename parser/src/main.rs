@@ -1,15 +1,25 @@
 mod parser;
+use lambda_http::{run, service_fn, Body, Error, Request, Response};
 
-use std::error::Error;
-use parser::Parser;
+async fn handler(event: Request) -> Result<Response<Body>, Error> {
 
-fn main() -> Result<(), Box<dyn Error>> {
+    let resp = Response::builder()
+        .status(200)
+        .header("content-type", "text/html")
+        .body("Hello AWS Lambda HTTP request".into())
+        .map_err(Box::new)?;
+    Ok(resp)
+}
 
-    let mut parser: Parser = Parser::new("%{word:name} is %{word:gender}, %{int:age} years old and weighs %{int:weight} kilograms".to_string());
+#[tokio::main]
+async fn main() -> Result<(), Error> {
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::DEBUG)
+        // disable printing the name of the module in every log line.
+        .with_target(false)
+        // disabling time is handy because CloudWatch will add the ingestion time.
+        .without_time()
+        .init();
 
-    let result = parser.parse("gary is male, 25 years old and weighs 68 kilograms".to_string())?;
-
-    println!("Result: {result}");
-
-    Ok(())
+    run(service_fn(handler)).await
 }
