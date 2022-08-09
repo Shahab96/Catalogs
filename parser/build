@@ -3,8 +3,7 @@
 rm -rf ./dist
 mkdir ./dist
 
-docker run --platform arm64 --rm -v ${PWD}:/code -v ${HOME}/.cargo/registry:/root/.cargo/registry -v ${HOME}/.cargo/git:/root/.cargo/git rustserverless/lambda-rust:latest-arm64
+cargo install cargo-lambda cargo-zigbuild
+cargo lambda build --release --arm64 --output-format zip
 
 cp ./target/lambda/release/bootstrap.zip ./dist/bootstrap.zip
-
-rm ./bootstrap

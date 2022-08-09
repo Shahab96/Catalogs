@@ -1,7 +1,6 @@
-mod parser;
 use lambda_http::{run, service_fn, Body, Error, Request, Response};
 
-async fn handler(event: Request) -> Result<Response<Body>, Error> {
+async fn handler(_event: Request) -> Result<Response<Body>, Error> {
 
     let resp = Response::builder()
         .status(200)
