@@ -5,7 +5,6 @@ mkdir ./dist
 
 docker run --platform arm64 --rm -v ${PWD}:/code -v ${HOME}/.cargo/registry:/root/.cargo/registry -v ${HOME}/.cargo/git:/root/.cargo/git rustserverless/lambda-rust:latest-arm64
 
-cp ./target/lambda/release/bootstrap ./bootstrap
-zip -rj ./dist/lambda.zip ./bootstrap
+cp ./target/lambda/release/bootstrap.zip ./dist/bootstrap.zip
 
 rm ./bootstrap
