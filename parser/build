@@ -3,10 +3,9 @@
 rm -rf ./dist
 mkdir ./dist
 
-rustup target add x86_64-unknown-linux-musl
-cargo build --release --target x86_64-unknown-linux-musl
+docker run --platform arm64 --rm -v ${PWD}:/code -v ${HOME}/.cargo/registry:/root/.cargo/registry -v ${HOME}/.cargo/git:/root/.cargo/git rustserverless/lambda-rust:latest-arm64
 
-cp ./target/x86_64-unknown-linux-musl/release/bootstrap ./bootstrap
+cp ./target/lambda/release/bootstrap ./bootstrap
 zip -rj ./dist/lambda.zip ./bootstrap
 
 rm ./bootstrap
