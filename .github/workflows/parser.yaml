@@ -28,7 +28,7 @@ jobs:
           components: rustfmt, clippy
     - name: Build
       run: ./build
-      working_directory: parser
+      working-directory: parser
     - name: Save Build
       uses: actions/upload-artifact@v3
       with:
