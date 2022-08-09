@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -84,7 +85,10 @@ func init() {
 }
 
 func Handler(ctx context.Context, req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	logger.Debugf("Event: %s", req)
+	data, err := json.Marshal(req)
+	if err == nil {
+		logger.Debugf("Event: %s", data)
+	}
 	return ginLambda.ProxyWithContext(ctx, req)
 }
 
