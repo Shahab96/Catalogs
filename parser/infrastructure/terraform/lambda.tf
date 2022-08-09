@@ -2,7 +2,7 @@ resource "aws_lambda_function" "this" {
   function_name = local.project_prefix
   filename      = "../../dist/lambda.zip"
   description   = filesha256("../../dist/lambda.zip")
-  handler       = "main"
+  handler       = "bootstrap"
   runtime       = "provided.al2"
   memory_size   = 128
   architectures = ["arm64"]
