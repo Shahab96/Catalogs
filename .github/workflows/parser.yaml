@@ -21,7 +21,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - run: |
-        pipx install ziglang
+        pip install ziglang
         rustup toolchain install stable --profile minimal
       working-directory: parser
     - uses: Swatinem/rust-cache@v2
