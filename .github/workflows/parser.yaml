@@ -25,7 +25,7 @@ jobs:
         python-version: '3.9'
         cache: 'pip'
     - run: |
-        pip install ziglang
+        pip install -r requirements.txt
         rustup toolchain install stable --profile minimal
       working-directory: parser
     - uses: Swatinem/rust-cache@v2
