@@ -3,7 +3,7 @@
 rm -rf ./dist
 mkdir ./dist
 
-cargo install cargo-lambda cargo-zigbuild
+cargo install cargo-lambda
 cargo lambda build --release --arm64 --output-format zip
 
 cp ./target/lambda/bootstrap/bootstrap.zip ./dist/bootstrap.zip
