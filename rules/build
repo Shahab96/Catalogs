@@ -3,10 +3,8 @@
 rm -rf ./dist
 mkdir ./dist
 
-cd ./src
-GOOS=linux GOARCH=amd64 go build -o ../dist/main .
-go vet
-cd ..
+cargo install cargo-lambda
+cargo lambda build --release --arm64 --output-format zip
 
-zip -rj ./dist/main.zip ./dist/main
-rm ./dist/main
+cp ./target/lambda/bootstrap/bootstrap.zip ./dist/lambda.zip
+
