@@ -15,6 +15,12 @@ on:
       role:
         description: 'Role to assume'
         required: true
+      gcp_identity_provider:
+        description: 'The OIDC identity provider in GCP'
+        required: true
+      gcp_service_account:
+        description: 'The service account in GCP configured for the OIDC provider'
+        required: true
   
 jobs:
   deploy:
@@ -23,6 +29,7 @@ jobs:
       id-token: write
       contents: read
     env:
+      TF_VAR_GCP_PROJECT: ${{ secrets.gcp_project }}
       TF_DRY_RUN: ${{ github.event_name == 'pull_request' && 'true' || 'false' }}
     steps:
     - uses: actions/checkout@v3
@@ -34,6 +41,11 @@ jobs:
         role-to-assume: ${{ secrets.role }}
         role-session-name: ${{ github.event.repository.name }}-${{ inputs.app }}-${{ inputs.stage }}
         aws-region: us-west-2
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v0
+      with:
+        workload_identity_provider: ${{ secrets.gcp_identity_provider }}
+        service_account: ${{ secrets.gcp_service_account }}
     - name: Fetch Build
       if: ${{ inputs.build }}
       uses: actions/download-artifact@v3
