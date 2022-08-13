@@ -29,7 +29,6 @@ jobs:
       id-token: write
       contents: read
     env:
-      TF_VAR_GCP_PROJECT: ${{ secrets.gcp_project }}
       TF_DRY_RUN: ${{ github.event_name == 'pull_request' && 'true' || 'false' }}
     steps:
     - uses: actions/checkout@v3
