@@ -1,10 +1,11 @@
 resource "aws_lambda_function" "this" {
   function_name = local.project_prefix
-  filename      = "../../dist/main.zip"
-  description   = filesha256("../../dist/main.zip")
-  handler       = "main"
-  runtime       = "go1.x"
-  memory_size   = 512
+  filename      = "../../dist/lambda.zip"
+  description   = filesha256("../../dist/lambda.zip")
+  handler       = "bootstrap"
+  runtime       = "provided.al2"
+  architectures = ["arm64"]
+  memory_size   = 128
   timeout       = 30
   role          = aws_iam_role.this.arn
 

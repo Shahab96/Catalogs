@@ -1,4 +1,5 @@
-name: "Deploy Parser Service"
+name: "parser"
+
 on:
   push:
     branches:
@@ -17,30 +18,13 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - run: |
-        pip install ziglang
-        rustup toolchain install stable --profile minimal
-      working-directory: parser
-    - uses: Swatinem/rust-cache@v2
-    - name: Build
-      run: ./build
-      working-directory: parser     
-    - name: Save Build
-      uses: actions/upload-artifact@v3
-      with:
-        name: dist
-        path: parser/dist
-        retention-days: 1
+    uses: ./.github/workflows/build.yaml
 
   dev:
     needs: build
     uses: ./.github/workflows/deploy-env.yaml
     with:
       stage: dev
-      working_directory: parser
     secrets:
       role: ${{ secrets.ROLE }}
 

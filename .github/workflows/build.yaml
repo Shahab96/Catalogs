@@ -1,0 +1,24 @@
+name: "Build"
+on:
+  workflow_call
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - run: |
+        pip install ziglang
+        rustup toolchain install stable --profile minimal
+      working-directory: ${{ github.workflow }}
+    - uses: Swatinem/rust-cache@v2
+    - name: Build
+      run: ./build
+      working-directory: ${{ github.workflow }}
+    - name: Save Build
+      uses: actions/upload-artifact@v3
+      with:
+        name: dist
+        path: ${{ github.workflow }}/dist
+        retention-days: 1
+

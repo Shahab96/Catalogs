@@ -6,10 +6,6 @@ on:
         description: 'Stage to deploy'
         type: string
         required: true
-      working_directory:
-        description: 'Working directory'
-        type: string
-        required: true
       build:
         description: 'Whether or not there is a build artifact to be fetched'
         type: boolean
@@ -43,6 +39,6 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: dist
-        path: ${{ inputs.working_directory }}/dist
+        path: ${{ github.workflow }}/dist
     - name: Deploy
-      run: ./scripts/deploy ${{ inputs.working_directory }} ${{ inputs.stage }}
+      run: ./scripts/deploy ${{ github.workflow }} ${{ inputs.stage }}
