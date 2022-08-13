@@ -12,8 +12,6 @@ resource "aws_lambda_function" "this" {
   environment {
     variables = {
       TABLE_NAME = aws_dynamodb_table.this.name
-      STAGE      = terraform.workspace
-      GIN_MODE   = terraform.workspace == "prod" ? "release" : "debug"
     }
   }
 
