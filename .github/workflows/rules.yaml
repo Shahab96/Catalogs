@@ -29,4 +29,5 @@ jobs:
       stage: dev
     secrets:
       role: ${{ secrets.ROLE }}
+      gcp_project: ${{ secrets.GCP_PROJECT }}
 

@@ -15,14 +15,18 @@ on:
       role:
         description: 'Role to assume'
         required: true
+      gcp_project:
+        description: 'The project in gcp for dns'
+        required: true
   
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     permissions:
       id-token: write
       contents: read
     env:
+      TF_VAR_GCP_PROJECT: ${{ secrets.gcp_project }}
       TF_DRY_RUN: ${{ github.event_name == 'pull_request' && 'true' || 'false' }}
     steps:
     - uses: actions/checkout@v3
