@@ -39,6 +39,6 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: dist
-        path: ${{ env.GITHUB_WORKFLOW }}/dist
+        path: ${{ github.workflow }}/dist
     - name: Deploy
-      run: ./scripts/deploy ${{ env.GITHUB_WORKFLOW }} ${{ inputs.stage }}
+      run: ./scripts/deploy ${{ github.workflow }} ${{ inputs.stage }}
