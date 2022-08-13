@@ -2,16 +2,16 @@ resource "aws_dynamodb_table" "this" {
   name         = local.project_prefix
   billing_mode = "PAY_PER_REQUEST"
 
-  hash_key  = "id"
-  range_key = "sort_key"
+  hash_key  = "pk"
+  range_key = "sk"
 
   attribute {
-    name = "id"
+    name = "pk"
     type = "S"
   }
 
   attribute {
-    name = "sort_key"
+    name = "sk"
     type = "S"
   }
 

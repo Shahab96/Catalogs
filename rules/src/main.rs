@@ -1,39 +1,20 @@
-mod api;
+mod guards;
 mod model;
-mod repository;
+mod routes;
 
-use api::rule::get_rule;
-use repository::dynamo::Dynamo;
+use crate::routes::rules::get_rule;
+use lambda_web::{is_running_on_lambda, launch_rocket_on_lambda, LambdaError};
+use rocket::{self, routes};
 
-use actix_web::{self, middleware::Logger, web::Data, App, HttpServer};
-use lambda_web::{is_running_on_lambda, run_actix_on_lambda, LambdaError};
-
-#[actix_web::main]
+#[rocket::main]
 async fn main() -> Result<(), LambdaError> {
-    let config = aws_config::load_from_env().await;
-    let key = "TABLE_NAME";
-
-    let factory = move || {
-        let dynamo_client: Dynamo;
-        match std::env::var(key) {
-            Ok(table_name) => dynamo_client = Dynamo::init(table_name, config.clone()),
-            Err(_) => panic!("{} variable not set", key),
-        }
-        let data = Data::new(dynamo_client);
-        let logger = Logger::default();
-        App::new().wrap(logger).app_data(data).service(get_rule)
-    };
-
+    let rocket = rocket::build().mount("/", routes![get_rule]);
     if is_running_on_lambda() {
-        // Run on AWS Lambda
-        run_actix_on_lambda(factory).await?;
+        // Launch on AWS Lambda
+        launch_rocket_on_lambda(rocket).await?;
     } else {
-        // Local server
-        println!("Running locally");
-        HttpServer::new(factory)
-            .bind("127.0.0.1:8000")?
-            .run()
-            .await?;
+        // Launch local server
+        let _ = rocket.launch().await?;
     }
     Ok(())
 }
