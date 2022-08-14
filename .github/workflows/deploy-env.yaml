@@ -40,7 +40,8 @@ jobs:
         role-to-assume: ${{ secrets.role }}
         role-session-name: ${{ github.event.repository.name }}-${{ inputs.app }}-${{ inputs.stage }}
         aws-region: us-west-2
-    - name: Authenticate to Google Cloud
+    - id: gcp_auth
+      name: Authenticate to Google Cloud
       uses: google-github-actions/auth@v0
       with:
         workload_identity_provider: ${{ secrets.gcp_identity_provider }}
@@ -52,4 +53,4 @@ jobs:
         name: dist
         path: ${{ github.workflow }}/dist
     - name: Deploy
-      run: ./scripts/deploy ${{ github.workflow }} ${{ inputs.stage }}
+      run: GOOGLE_APPLICATION_CREDENTIALS=${{ steps.gcp_auth.outputs.credentials_file_path }} ./scripts/deploy ${{ github.workflow }} ${{ inputs.stage }}
