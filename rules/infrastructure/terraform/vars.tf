@@ -7,12 +7,6 @@ variable "app_namespace" {
   description = "A namespace to be used on all resource names in this project"
 }
 
-variable "gcp_project" {
-  type        = string
-  description = "The project id in google (Used for making dns records)"
-  sensitive   = true
-}
-
 #--------------------------
 # Configurable variables
 #--------------------------
