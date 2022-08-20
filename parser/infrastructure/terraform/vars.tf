@@ -16,6 +16,12 @@ variable "region" {
   default     = "us-west-2"
 }
 
+variable "gcp_region" {
+  type        = string
+  description = "The region for resources in GCP"
+  default     = "us-central1"
+}
+
 #--------------------------
 # Interpolated values
 #--------------------------
