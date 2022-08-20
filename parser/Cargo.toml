@@ -9,10 +9,11 @@ name = "bootstrap"
 path = "src/main.rs"
 
 [dependencies]
-lambda_http = { git = "https://github.com/awslabs/aws-lambda-rust-runtime" }
-lambda_runtime = "0.6.0"
 regex = "1.6.0"
+serde = "1.0.143"
 serde_json = "1.0.83"
-tokio = { version = "1", features = ["macros"] }
-tracing = { version = "0.1", features = ["log"] }
-tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt"] }
+aws-config = "0.47.0"
+derive_more = "0.99.17"
+lambda-web = { version = "0.2.0", features = ["rocket05"] }
+log = "0.4.17"
+rocket = { version = "0.5.0-rc.2", features = ["tls", "json", "uuid"] }
