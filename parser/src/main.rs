@@ -1,24 +1,21 @@
-use lambda_http::{run, service_fn, Body, Error, Request, Response};
+mod model;
+mod routes;
+mod service;
 
-async fn handler(_event: Request) -> Result<Response<Body>, Error> {
+use lambda_web::{is_running_on_lambda, launch_rocket_on_lambda, LambdaError};
+use rocket::{self, routes};
 
-    let resp = Response::builder()
-        .status(200)
-        .header("content-type", "text/html")
-        .body("Hello AWS Lambda HTTP request".into())
-        .map_err(Box::new)?;
-    Ok(resp)
-}
+use crate::routes::extractor::evaluate;
 
-#[tokio::main]
-async fn main() -> Result<(), Error> {
-    tracing_subscriber::fmt()
-        .with_max_level(tracing::Level::DEBUG)
-        // disable printing the name of the module in every log line.
-        .with_target(false)
-        // disabling time is handy because CloudWatch will add the ingestion time.
-        .without_time()
-        .init();
-
-    run(service_fn(handler)).await
+#[rocket::main]
+async fn main() -> Result<(), LambdaError> {
+    let rocket = rocket::build().mount("/", routes![evaluate]);
+    if is_running_on_lambda() {
+        // Launch on AWS Lambda
+        launch_rocket_on_lambda(rocket).await?;
+    } else {
+        // Launch local server
+        let _ = rocket.launch().await?;
+    }
+    Ok(())
 }
