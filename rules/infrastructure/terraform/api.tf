@@ -8,7 +8,7 @@ data "google_dns_managed_zone" "this" {
 
 resource "google_dns_managed_zone" "this" {
   name     = local.project_prefix
-  dns_name = "${terraform.workspace}.${data.google_dns_managed_zone.this.dns_name}"
+  dns_name = "${local.project_prefix}.${terraform.workspace}.${data.google_dns_managed_zone.this.dns_name}"
 }
 
 resource "google_dns_record_set" "this" {
