@@ -15,6 +15,18 @@ resource "aws_dynamodb_table" "this" {
     type = "S"
   }
 
+  attribute {
+    name = "id"
+    type = "S"
+  }
+
+  global_secondary_index {
+    hash_key = "pk"
+    range_key = "id"
+    name = "id-index"
+    projection_type = "ALL"
+  }
+
   server_side_encryption {
     enabled = true
   }
