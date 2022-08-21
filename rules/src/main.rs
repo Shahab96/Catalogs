@@ -8,7 +8,11 @@ use rocket::{self, routes};
 
 #[rocket::main]
 async fn main() -> Result<(), LambdaError> {
-    let rocket = rocket::build().mount("/", routes![get_rule, put_rule]);
+    let rocket = rocket::build()
+        .mount("/", routes![
+            get_rule,
+            put_rule,
+        ]);
     if is_running_on_lambda() {
         // Launch on AWS Lambda
         launch_rocket_on_lambda(rocket).await?;

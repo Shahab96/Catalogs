@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::guards::api_key::ApiKey;
 use crate::model::rule::Rule;
 
@@ -6,18 +8,23 @@ use rocket::serde::json::{Json, Value};
 use rocket::serde::uuid::Uuid;
 use rocket::response::status::Created;
 use rocket::http::Status;
-use serde_json::Map;
 
 #[get("/rule/<format>/<uuid>")]
-pub async fn get_rule(api_key: ApiKey<'_>, format: &str, uuid: Uuid) -> Result<Json<Map<String, Value>>, Status> {
-    let result = Rule::get(format, uuid, api_key.value).await;
+pub async fn get_rule<'r>(api_key: ApiKey<'_>, format: &'r str, uuid: Uuid) -> Result<Json<HashMap<&'r str, &'r str>>, Status> {
+    let rule = Rule {
+        pk: format!("{}#{}", format, api_key.value).as_str(),
+        sk: uuid,
+        id: None,
+        expr: None,
+    };
+    let result = Rule::get(rule).await;
 
     match result {
-        Ok(rule) => {
-            let mut response = Map::new();
-            response.insert(String::from("uuid"), Value::String(rule.sk.clone()));
-            response.insert(String::from("expr"), Value::String(rule.expr.clone()));
-            response.insert(String::from("id"), Value::String(rule.id.clone()));
+        Ok() => {
+            let mut response = HashMap::new();
+            response.insert("uuid", rule.sk);
+            response.insert("expr", rule.expr);
+            response.insert("id", rule.id);
 
             Ok(Json(response))
         },
@@ -32,7 +39,7 @@ pub async fn get_rule(api_key: ApiKey<'_>, format: &str, uuid: Uuid) -> Result<J
 }
 
 #[post("/rule/<format>", data = "<data>")]
-pub async fn put_rule(api_key: ApiKey<'_>, format: &str, data: Json<Map<String, Value>>) -> Result<Created<Json<Map<String, Value>>>, Status> {
+pub async fn put_rule<'r>(api_key: ApiKey<'_>, format: &'r str, data: Json<HashMap<String, Value>>) -> Result<Created<Json<HashMap<&'r str, &'r str>>>, Status> {
     let id = data.get("id").unwrap().as_str().unwrap();
     let expr = data.get("expr").unwrap().as_str().unwrap();
 
@@ -46,10 +53,10 @@ pub async fn put_rule(api_key: ApiKey<'_>, format: &str, data: Json<Map<String, 
 
     match result {
         Ok(uuid) => {
-            let mut response = Map::new();
-            response.insert(String::from("id"), Value::String(id.to_string()));
-            response.insert(String::from("uuid"), Value::String(uuid.to_string()));
-            response.insert(String::from("expr"), Value::String(expr.to_string()));
+            let mut response = HashMap::new();
+            response.insert("id", id);
+            response.insert("uuid", uuid);
+            response.insert("expr", expr);
 
             Ok(Created::new(format!("/rule/{}", format)).body(Json(response)))
         },

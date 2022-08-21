@@ -1,35 +1,35 @@
 use aws_sdk_dynamodb::model::AttributeValue;
 use aws_sdk_dynamodb::Client;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(crate = "rocket::serde")]
-pub struct Rule {
-    pub pk: String,
-    pub sk: String,
-    pub id: String,
-    pub expr: String,
+pub struct Rule<'r> {
+    pub pk: &'r str,
+    pub sk: &'r str,
+    pub id: Option<&'r str>,
+    pub expr: Option<&'r str>,
 }
 
-impl Rule {
-    pub fn new(format: &str, tenant_id: &str, id: &str, expr: &str) -> Rule {
-        let sk = Uuid::new_v4().to_string();
+impl Rule<'_> {
+    pub fn new<'r>(format: &'r str, tenant_id: &'r str, id: &'r str, expr: &'r str) -> Rule<'r> {
+        let sk = Uuid::new_v4().to_string().as_str();
         Rule {
-            pk: format!("{}#{}", format, tenant_id),
+            pk: format!("{}#{}", format, tenant_id).as_str(),
             sk,
-            id: String::from(id),
-            expr: String::from(expr),
+            id: Some(id),
+            expr: Some(expr),
         }
     }
 
-    pub async fn get(format: &str, uuid: Uuid, tenant_id: &str) -> Result<Rule, String> {
+    pub async fn get<'r>(request: &'r mut Rule<'r>) -> Result<(), String> {
         let config = aws_config::load_from_env().await;
         let client = Client::new(&config);
         match std::env::var("TABLE_NAME") {
             Ok(table_name) => {
-                let pk = AttributeValue::S(format!("{}#{}", format, tenant_id));
-                let sk = AttributeValue::S(uuid.to_string());
+                let pk = AttributeValue::S(String::from(request.pk));
+                let sk = AttributeValue::S(String::from(request.sk));
 
                 let response = client
                     .get_item()
@@ -42,12 +42,12 @@ impl Rule {
                 match response {
                     Ok(response_data) => match response_data.item() {
                         Some(rule) => {
-                            Ok(Rule {
-                                pk: rule.get("pk").unwrap().as_s().unwrap().to_string(),
-                                sk: rule.get("sk").unwrap().as_s().unwrap().to_string(),
-                                id: rule.get("id").unwrap().as_s().unwrap().to_string(),
-                                expr: rule.get("expr").unwrap().as_s().unwrap().to_string(),
-                            })
+                            let id = rule.get("id").unwrap().as_s().unwrap().as_str();
+                            let expr = rule.get("expr").unwrap().as_s().unwrap().as_str();
+                            request.id = Some(id);
+                            request.expr = Some(expr);
+
+                            Ok(())
                         },
                         None => Err(String::from("Not Found")),
                     },
@@ -58,7 +58,7 @@ impl Rule {
         }
     }
 
-    pub async fn put(item: &Rule) -> Result<String, String> {
+    pub async fn put<'r>(item: &'r Rule<'_>) -> Result<&'r str, String> {
         let config = aws_config::load_from_env().await;
         let client = Client::new(&config);
         match std::env::var("TABLE_NAME") {
@@ -66,16 +66,16 @@ impl Rule {
                 let response = client
                     .put_item()
                     .table_name(table_name)
-                    .item("pk", AttributeValue::S(item.pk.clone()))
-                    .item("sk", AttributeValue::S(item.sk.clone()))
-                    .item("id", AttributeValue::S(item.id.clone()))
-                    .item("expr", AttributeValue::S(item.expr.clone()))
+                    .item("pk", AttributeValue::S(String::from(item.pk)))
+                    .item("sk", AttributeValue::S(String::from(item.sk)))
+                    .item("id", AttributeValue::S(String::from(item.id)))
+                    .item("expr", AttributeValue::S(String::from(item.expr)))
                     .condition_expression("attribute_not_exists(pk) AND attribute_not_exists(id)")
                     .send()
                     .await;
 
                 match response {
-                    Ok(_) => Ok(item.sk.clone()),
+                    Ok(_) => Ok(&item.sk),
                     Err(error) => Err(error.to_string()),
                 }
             }
