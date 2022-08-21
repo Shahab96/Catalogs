@@ -16,7 +16,7 @@ impl<'r> FromRequest<'r> for ApiKey<'r> {
     type Error = ApiKeyError;
 
     async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
-        fn is_valid(key: &str) -> bool {
+        fn is_valid(_key: &str) -> bool {
             // For now we don't actually have auth.
             return true;
         }
