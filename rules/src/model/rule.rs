@@ -6,10 +6,10 @@ use uuid::Uuid;
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(crate = "rocket::serde")]
 pub struct Rule {
-    pk: String,
-    sk: String,
-    id: String,
-    expr: String,
+    pub pk: String,
+    pub sk: String,
+    pub id: String,
+    pub expr: String,
 }
 
 impl Rule {

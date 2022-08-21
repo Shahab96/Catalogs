@@ -9,11 +9,18 @@ use rocket::http::Status;
 use serde_json::Map;
 
 #[get("/rule/<format>/<uuid>")]
-pub async fn get_rule(api_key: ApiKey<'_>, format: &str, uuid: Uuid) -> Result<Json<Rule>, Status> {
+pub async fn get_rule(api_key: ApiKey<'_>, format: &str, uuid: Uuid) -> Result<Json<Map<String, Value>>, Status> {
     let result = Rule::get(format, uuid, api_key.value).await;
 
     match result {
-        Ok(rule) => Ok(Json(rule)),
+        Ok(rule) => {
+            let mut response = Map::new();
+            response.insert(String::from("uuid"), Value::String(rule.sk.clone()));
+            response.insert(String::from("expr"), Value::String(rule.expr.clone()));
+            response.insert(String::from("id"), Value::String(rule.id.clone()));
+
+            Ok(Json(response))
+        },
         Err(error) => match error.as_str() {
             "Not Found" => Err(Status::NotFound),
             _ => {
@@ -38,9 +45,10 @@ pub async fn put_rule(api_key: ApiKey<'_>, format: &str, data: Json<Map<String, 
     let result = Rule::put(&rule).await;
 
     match result {
-        Ok(_) => {
+        Ok(uuid) => {
             let mut response = Map::new();
             response.insert(String::from("id"), Value::String(id.to_string()));
+            response.insert(String::from("uuid"), Value::String(uuid.to_string()));
             response.insert(String::from("expr"), Value::String(expr.to_string()));
 
             Ok(Created::new(format!("/rule/{}", format)).body(Json(response)))
