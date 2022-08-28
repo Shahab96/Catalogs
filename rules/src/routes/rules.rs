@@ -32,7 +32,7 @@ pub async fn get_rule(api_key: ApiKey<'_>, format: &str, uuid: Uuid) -> Result<J
 }
 
 #[post("/rule/<format>", data = "<data>")]
-pub async fn put_rule(api_key: ApiKey<'_>, format: &str, data: Json<Map<String, Value>>) -> Result<Created<Json<Map<String, Value>>>, Status> {
+pub async fn create_rule(api_key: ApiKey<'_>, format: &str, data: Json<Map<String, Value>>) -> Result<Created<Json<Map<String, Value>>>, Status> {
     let id = data.get("id").unwrap().as_str().unwrap();
     let expr = data.get("expr").unwrap().as_str().unwrap();
 
@@ -42,7 +42,7 @@ pub async fn put_rule(api_key: ApiKey<'_>, format: &str, data: Json<Map<String, 
         id,
         expr,
     );
-    let result = Rule::put(&rule).await;
+    let result = Rule::create(&rule).await;
 
     match result {
         Ok(uuid) => {

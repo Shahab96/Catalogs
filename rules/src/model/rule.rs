@@ -58,7 +58,7 @@ impl Rule {
         }
     }
 
-    pub async fn put(item: &Rule) -> Result<String, String> {
+    pub async fn create(item: &Rule) -> Result<String, String> {
         let config = aws_config::load_from_env().await;
         let client = Client::new(&config);
         match std::env::var("TABLE_NAME") {
