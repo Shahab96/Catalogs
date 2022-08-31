@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use crate::guards::api_key::ApiKey;
 use crate::model::rule::Rule;
 
@@ -9,8 +11,8 @@ use rocket::http::Status;
 use serde_json::Map;
 
 #[get("/rule/<format>/<uuid>")]
-pub async fn get_rule(api_key: ApiKey<'_>, format: &str, uuid: Uuid) -> Result<Json<Map<String, Value>>, Status> {
-    let result = Rule::get(format, uuid, api_key.value).await;
+pub async fn get_rule(api_key: ApiKey<'_>, format: &str, uuid: &str) -> Result<Json<Map<String, Value>>, Status> {
+    let result = Rule::get(format, Uuid::from_str(uuid).unwrap(), api_key.value).await;
 
     match result {
         Ok(rule) => {
@@ -31,7 +33,7 @@ pub async fn get_rule(api_key: ApiKey<'_>, format: &str, uuid: Uuid) -> Result<J
     }
 }
 
-#[post("/rule/<format>", data = "<data>")]
+#[post("/rule/<format>", data = "<data>", format = "json")]
 pub async fn create_rule(api_key: ApiKey<'_>, format: &str, data: Json<Map<String, Value>>) -> Result<Created<Json<Map<String, Value>>>, Status> {
     let id = data.get("id").unwrap().as_str().unwrap();
     let expr = data.get("expr").unwrap().as_str().unwrap();
