@@ -75,6 +75,39 @@ pub async fn create_rule(
                 println!("{:?}", error);
                 Err(Status::InternalServerError)
             }
-        },
+        }
+    }
+}
+
+#[get("/rules/<format>")]
+pub async fn list_rules(
+    api_key: ApiKey<'_>,
+    format: &str,
+    client: &State<Client>,
+    table_name: &State<String>,
+) -> Result<Json<Vec<Map<String, Value>>>, Status> {
+    let result = Rule::list(format, api_key.value, client, &table_name).await;
+
+    match result {
+        Ok(rules) => {
+            let mut response = Vec::new();
+            for rule in rules {
+                let mut rule_response = Map::new();
+                rule_response.insert(String::from("uuid"), Value::String(rule.sk.clone()));
+                rule_response.insert(String::from("expr"), Value::String(rule.expr.clone()));
+                rule_response.insert(String::from("id"), Value::String(rule.id.clone()));
+
+                response.push(rule_response);
+            }
+
+            Ok(Json(response))
+        }
+        Err(error) => match error.as_str() {
+            "Not Found" => Err(Status::NotFound),
+            _ => {
+                println!("{:?}", error);
+                Err(Status::InternalServerError)
+            }
+        }
     }
 }

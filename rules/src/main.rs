@@ -2,7 +2,7 @@ mod guards;
 mod model;
 mod routes;
 
-use crate::routes::rules::{create_rule, get_rule};
+use crate::routes::rules::{create_rule, get_rule, list_rules};
 use aws_sdk_dynamodb::Client;
 use lambda_web::{is_running_on_lambda, launch_rocket_on_lambda, LambdaError};
 use rocket::{self, routes};
@@ -16,7 +16,7 @@ async fn main() -> Result<(), LambdaError> {
             let rocket = rocket::build()
                 .manage(client)
                 .manage(table_name)
-                .mount("/", routes![get_rule, create_rule]);
+                .mount("/", routes![get_rule, create_rule, list_rules]);
             if is_running_on_lambda() {
                 // Launch on AWS Lambda
                 launch_rocket_on_lambda(rocket).await?;

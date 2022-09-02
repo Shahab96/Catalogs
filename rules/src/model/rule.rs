@@ -77,4 +77,41 @@ impl Rule {
             Err(error) => Err(error.to_string()),
         }
     }
+
+    pub async fn list(
+        format: &str,
+        tenant_id: &str,
+        client: &State<Client>,
+        table_name: &str,
+    ) -> Result<Vec<Rule>, String> {
+        let pk = AttributeValue::S(format!("{}#{}", format, tenant_id));
+        let response = client
+            .query()
+            .table_name(table_name)
+            .key_condition_expression("pk = :pk")
+            .expression_attribute_values(":pk", pk)
+            .send()
+            .await;
+
+        match response {
+            Ok(response_data) => {
+                let mut rules: Vec<Rule> = Vec::new();
+
+                // If response_data.items() is Some then map it to a vector of rules, otherwise return an empty vector
+                if let Some(items) = response_data.items() {
+                    rules = items
+                        .iter()
+                        .map(|rule| Rule {
+                            pk: rule.get("pk").unwrap().as_s().unwrap().to_string(),
+                            sk: rule.get("sk").unwrap().as_s().unwrap().to_string(),
+                            id: rule.get("id").unwrap().as_s().unwrap().to_string(),
+                            expr: rule.get("expr").unwrap().as_s().unwrap().to_string(),
+                        })
+                        .collect();
+                }
+                Ok(rules)
+            }
+            Err(error) => Err(error.to_string()),
+        }
+    }
 }
