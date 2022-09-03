@@ -12,6 +12,7 @@ jobs:
         rustup toolchain install stable --profile minimal
       working-directory: ${{ github.workflow }}
     - uses: Swatinem/rust-cache@v2
+      working-directory: ${{ github.workflow }}
     - name: Build
       run: ./build
       working-directory: ${{ github.workflow }}
