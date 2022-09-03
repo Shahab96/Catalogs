@@ -20,6 +20,7 @@ provider "aws" {
 }
 
 provider "google" {
+  project = "dogar-fzaspcp1"
   region  = var.gcp_region
 }
 

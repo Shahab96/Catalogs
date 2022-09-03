@@ -1,5 +1,6 @@
 use aws_sdk_dynamodb::model::AttributeValue;
 use aws_sdk_dynamodb::Client;
+use aws_sdk_dynamodb::output::PutItemOutput;
 use rocket::State;
 use serde::Serialize;
 use uuid::Uuid;
@@ -43,7 +44,7 @@ impl User {
         user: &Self,
         client: &State<Client>,
         table_name: &str,
-    ) -> Result<(), String> {
+    ) -> Result<PutItemOutput, aws_sdk_dynamodb::Error> {
         let result = client
             .put_item()
             .table_name(table_name)
@@ -56,15 +57,14 @@ impl User {
                 AttributeValue::S(user.hashed_password.clone()),
             )
             .item("tenant_list", AttributeValue::Ss(user.tenant_list.clone()))
-            .item("active_tenant", AttributeValue::S(user.active_tenant.clone()))
+            .item(
+                "active_tenant",
+                AttributeValue::S(user.active_tenant.clone()),
+            )
+            .condition_expression("attribute_not_exists(email)")
             .send()
-            .await;
+            .await?;
 
-        match result {
-            Ok(_) => Ok(()),
-            Err(error) => match error {
-                _ => Err(error.to_string()),
-            },
-        }
+        Ok(result)
     }
 }
