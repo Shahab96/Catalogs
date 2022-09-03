@@ -16,7 +16,8 @@ pub struct Rule {
 impl Rule {
     pub fn new(format: &str, tenant_id: &str, id: &str, expr: &str) -> Rule {
         let sk = Uuid::new_v4().to_string();
-        Rule {
+
+        Self {
             pk: format!("{}#{}", format, tenant_id),
             sk,
             id: String::from(id),

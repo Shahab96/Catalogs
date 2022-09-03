@@ -35,7 +35,6 @@ data "aws_iam_policy_document" "permissions" {
     ]
     resources = [
       aws_dynamodb_table.this.arn,
-      aws_cloudwatch_log_group.this.arn
     ]
   }
 }
