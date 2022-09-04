@@ -3,10 +3,12 @@ use argon2::{
     Argon2,
 };
 use hmac::{Hmac, Mac};
-use jwt::token::Signed;
+use jwt::{header::HeaderType, token::Signed};
 use jwt::{AlgorithmType, Header, SignWithKey, Token};
+use serde_json::{Number, Value};
 use sha2::Sha384;
 use std::collections::BTreeMap;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 pub fn hash_password(password: &str) -> String {
     let salt = SaltString::generate(&mut OsRng);
@@ -32,7 +34,7 @@ pub fn mint_token<'a>(
     access_secret: &'a str,
     sub: &'a str,
     tenant_id: &'a str,
-) -> Result<Token<Header, BTreeMap<&'a str, &'a str>, Signed>, &'a str> {
+) -> Result<Token<Header, BTreeMap<&'a str, Value>, Signed>, &'a str> {
     let key: Hmac<Sha384> = match Hmac::new_from_slice(access_secret.as_bytes()) {
         Ok(k) => k,
         Err(_) => return Err("Error signing JWT."),
@@ -40,12 +42,33 @@ pub fn mint_token<'a>(
 
     let header = Header {
         algorithm: AlgorithmType::Hs384,
+        type_: Some(HeaderType::JsonWebToken),
         ..Default::default()
     };
 
-    let mut claims = BTreeMap::new();
-    claims.insert("sub", sub);
-    claims.insert("tid", tenant_id);
+    let mut claims: BTreeMap<&str, Value> = BTreeMap::new();
+    claims.insert("sub", Value::String(sub.to_string()));
+    claims.insert("tid", Value::String(tenant_id.to_string()));
+    claims.insert(
+        "iat",
+        Value::Number(Number::from(
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_secs(),
+        )),
+    );
+    claims.insert(
+        "exp",
+        Value::Number(Number::from(
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_secs()
+                + 300,
+        )),
+    );
+    claims.insert("iss", Value::String(std::env::var("DOMAIN_NAME").unwrap()));
 
     let token = Token::new(header, claims);
 
