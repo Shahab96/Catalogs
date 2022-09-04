@@ -40,7 +40,6 @@ provider "registry.terraform.io/hashicorp/google" {
     "zh:f569b65999264a9416862bca5cd2a6177d94ccb0424f3a4ef424428912b9cb3c",
   ]
 }
-<<<<<<< HEAD
 
 provider "registry.terraform.io/hashicorp/random" {
   version = "3.4.2"
@@ -60,5 +59,3 @@ provider "registry.terraform.io/hashicorp/random" {
     "zh:fcd6826d4398147314620401a5908dd35c6f2ebac7e7d3a7d77078dbc7c5a0e6",
   ]
 }
-=======
->>>>>>> 286f085457de1cac4cc5561bf67db2319a32c719
