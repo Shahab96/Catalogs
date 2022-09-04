@@ -6,11 +6,6 @@ on:
         description: 'Stage to deploy'
         type: string
         required: true
-      build:
-        description: 'Whether or not there is a build artifact to be fetched'
-        type: boolean
-        default: true
-        required: false
     secrets:
       role:
         description: 'Role to assume'
@@ -46,5 +41,10 @@ jobs:
       with:
         workload_identity_provider: ${{ secrets.gcp_identity_provider }}
         service_account: ${{ secrets.gcp_service_account }}
+    - run: mkdir build
+    - name: Fetch Build
+      uses: actions/download-artifact@v3
+      with:
+        path: ./build
     - name: Deploy
       run: GOOGLE_APPLICATION_CREDENTIALS=${{ steps.gcp_auth.outputs.credentials_file_path }} ./scripts/deploy ${{ inputs.stage }}

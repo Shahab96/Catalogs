@@ -7,6 +7,11 @@ variable "app_namespace" {
   description = "A namespace to be used on all resource names in this project"
 }
 
+variable "build_path" {
+  type        = string
+  description = "The path to the lambda function zip file"
+}
+
 #--------------------------
 # Interpolated values
 #--------------------------

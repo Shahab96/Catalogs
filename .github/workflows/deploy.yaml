@@ -27,7 +27,7 @@ jobs:
     - name: Save Build
       uses: actions/upload-artifact@v3
       with:
-        name: dist
+        name: ${{ matrix.service }}
         path: ${{ matrix.service }}/dist
         retention-days: 1
 
