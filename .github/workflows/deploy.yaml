@@ -1,0 +1,42 @@
+name: "Deploy"
+
+on:
+  push:
+    branches:
+    - main
+  pull_request:
+    branches:
+    - main
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        service: [rule, user, extraction]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - run: |
+        pip install ziglang
+        rustup toolchain install stable --profile minimal
+      working-directory: ${{ matrix.service }}
+    - uses: Swatinem/rust-cache@v2
+    - name: Build
+      run: ./build
+      working-directory: ${{ matrix.service }}
+    - name: Save Build
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.service }}
+        path: ${{ matrix.service }}/dist
+        retention-days: 1
+
+  dev:
+    needs: build
+    uses: ./.github/workflows/deploy-env.yaml
+    with:
+      stage: dev
+    secrets:
+      role: ${{ secrets.ROLE }}
+      gcp_identity_provider: ${{ secrets.GCP_PROVIDER }}
+      gcp_service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}

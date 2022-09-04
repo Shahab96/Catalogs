@@ -13,10 +13,6 @@ variable "build_path" {
 }
 
 #--------------------------
-# Configurable variables
-#--------------------------
-
-#--------------------------
 # Interpolated values
 #--------------------------
 locals {

@@ -1,7 +1,7 @@
 resource "aws_lambda_function" "this" {
   function_name = local.project_prefix
-  filename      = "../../dist/lambda.zip"
-  description   = filesha256("../../dist/lambda.zip")
+  filename      = var.build_path
+  description   = filesha256(var.build_path)
   handler       = "bootstrap"
   runtime       = "provided.al2"
   architectures = ["arm64"]
