@@ -14,9 +14,20 @@ resource "aws_dynamodb_table" "this" {
     type = "S"
   }
 
+  attribute {
+    name = "gsi_email"
+    type = "S"
+  }
+
   global_secondary_index {
     name            = "uuid-index"
     hash_key        = "gsi_uuid"
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name            = "email-index"
+    hash_key        = "gsi_email"
     projection_type = "ALL"
   }
 
@@ -24,4 +35,3 @@ resource "aws_dynamodb_table" "this" {
     enabled = true
   }
 }
-

@@ -12,6 +12,8 @@ resource "aws_lambda_function" "this" {
   environment {
     variables = {
       TABLE_NAME = aws_dynamodb_table.this.name
+      ACCESS_TOKEN_SECRET = aws_secretsmanager_secret.this["access"].arn
+      REFRESH_TOKEN_SECRET = aws_secretsmanager_secret.this["refresh"].arn
     }
   }
 

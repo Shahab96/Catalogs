@@ -1,11 +1,11 @@
-use aws_sdk_dynamodb::model::AttributeValue;
-use aws_sdk_dynamodb::Client;
-use aws_sdk_dynamodb::output::PutItemOutput;
+use aws_sdk_dynamodb::model::{AttributeValue, ReturnValue};
+use aws_sdk_dynamodb::output::{PutItemOutput, UpdateItemOutput};
 use rocket::State;
 use serde::Serialize;
 use uuid::Uuid;
 
 use crate::utils::utils::hash_password;
+use crate::model::state;
 
 #[derive(Debug, Serialize)]
 pub struct User {
@@ -24,7 +24,7 @@ impl User {
         let pk = format!("USER#{}", email);
         let gsi_uuid = format!("UUID#{}", uuid);
         let email = String::from(email);
-        let hashed_password = hash_password(password);
+        let hashed_password = hash_password(password).to_string();
         let mut tenant_list = Vec::new();
         tenant_list.push(Uuid::new_v4().to_string());
         let active_tenant = String::from("");
@@ -42,12 +42,11 @@ impl User {
 
     pub async fn create(
         user: &Self,
-        client: &State<Client>,
-        table_name: &str,
+        state: &State<state::State>,
     ) -> Result<PutItemOutput, aws_sdk_dynamodb::Error> {
-        let result = client
+        let result = state.dynamo
             .put_item()
-            .table_name(table_name)
+            .table_name(&state.table_name)
             .item("pk", AttributeValue::S(user.pk.clone()))
             .item("gsi_uuid", AttributeValue::S(user.gsi_uuid.clone()))
             .item("uuid", AttributeValue::S(user.uuid.to_string()))
@@ -66,5 +65,38 @@ impl User {
             .await?;
 
         Ok(result)
+    }
+
+    pub async fn login(
+        email: &str,
+        state: &State<state::State>,
+    ) -> Result<UpdateItemOutput, aws_sdk_dynamodb::Error> {
+        let user_pk = format!("USER#{}", email);
+
+        let tenant = state.dynamo
+            .query()
+            .table_name(&state.table_name)
+            .index_name("email-index")
+            .key_condition_expression("gsi_email = :email")
+            .expression_attribute_values(":email", AttributeValue::S(format!("EMAIL#{}", email)))
+            .send()
+            .await?;
+
+        let tenant_id = match tenant.items() {
+            Some(t) => t[0].get("uuid").unwrap().as_s().unwrap().to_string(),
+            None => String::from(""),
+        };
+
+        let response = state.dynamo
+            .update_item()
+            .table_name(&state.table_name)
+            .key("pk", AttributeValue::S(user_pk))
+            .update_expression("SET active_tenant = :tenant_id")
+            .expression_attribute_values(":tenant_id", AttributeValue::S(tenant_id))
+            .return_values(ReturnValue::AllNew)
+            .send()
+            .await?;
+
+        Ok(response)
     }
 }
