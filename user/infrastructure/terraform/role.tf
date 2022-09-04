@@ -1,4 +1,4 @@
-data "aws_iam_policy_document" "assume" {
+data "aws_iam_policy_document" "trust" {
   statement {
     effect = "Allow"
     principals {
@@ -11,7 +11,7 @@ data "aws_iam_policy_document" "assume" {
 
 resource "aws_iam_role" "this" {
   name               = local.project_prefix
-  assume_role_policy = data.aws_iam_policy_document.assume.json
+  assume_role_policy = data.aws_iam_policy_document.trust.json
 }
 
 resource "aws_iam_role_policy_attachment" "this" {
@@ -25,7 +25,7 @@ resource "aws_iam_role_policy_attachment" "this" {
   policy_arn = each.value
 }
 
-data "aws_iam_policy_document" "permissions" {
+data "aws_iam_policy_document" "this" {
   statement {
     effect = "Allow"
     actions = [
@@ -39,9 +39,20 @@ data "aws_iam_policy_document" "permissions" {
       "${aws_dynamodb_table.this.arn}/index/*",
     ]
   }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "secretsmanager:GetSecretValue",
+    ]
+    resources = [
+      aws_secretsmanager_secret.this["access"].arn,
+      aws_secretsmanager_secret.this["refresh"].arn,
+    ]
+  }
 }
 
 resource "aws_iam_policy" "this" {
   name   = local.project_prefix
-  policy = data.aws_iam_policy_document.permissions.json
+  policy = data.aws_iam_policy_document.this.json
 }

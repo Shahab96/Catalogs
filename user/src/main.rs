@@ -44,6 +44,7 @@ async fn main() -> Result<(), LambdaError> {
     };
 
     let rocket = rocket::build()
+        .configure(rocket::Config::debug_default())
         .manage(state)
         .mount("/", routes![register, login]);
 
