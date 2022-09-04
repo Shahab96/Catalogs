@@ -9,9 +9,9 @@ use crate::service::extractor::Extractor;
 #[post("/evaluate", format = "json", data = "<message>")]
 pub async fn evaluate(message: Json<EvaluationEvent>) -> Result<Json<Map<String, Value>>, Status> {
     println!("{:?}", message.0);
-    let mut parser = Parser::new(message.0.rule);
+    let mut extractor = Extractor::new(message.0.rule);
 
-    match parser.parse(message.0.sample) {
+    match extractor.extract(message.0.sample) {
         Ok(data) => Ok(Json(data)),
         Err(_) => Err(Status::InternalServerError),
     }

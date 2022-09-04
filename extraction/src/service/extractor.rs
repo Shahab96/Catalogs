@@ -16,7 +16,7 @@ impl Extractor {
         }
     }
 
-    pub fn parse(&mut self, log: String) -> Result<Map<String, Value>, Box<dyn Error>> {
+    pub fn extract(&mut self, log: String) -> Result<Map<String, Value>, Box<dyn Error>> {
         self.rule = self.grok_to_regex(self.rule.clone());
         let result = self.match_against(log);
 
