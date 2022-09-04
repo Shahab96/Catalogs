@@ -12,6 +12,7 @@ resource "aws_lambda_function" "this" {
   environment {
     variables = {
       STAGE = terraform.workspace
+      ACCESS_TOKEN_SECRET = var.access_token_secret
     }
   }
 }
