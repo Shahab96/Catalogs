@@ -10,8 +10,9 @@ on:
 
 jobs:
   build:
-    matrix:
-      service: [rule, user, extraction]
+    strategy:
+      matrix:
+        service: [rule, user, extraction]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
