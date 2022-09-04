@@ -3,7 +3,8 @@ use argon2::{
     Argon2,
 };
 use hmac::{Hmac, Mac};
-use jwt::{header::HeaderType, token::Signed};
+use jwt::header::HeaderType;
+use jwt::token::Signed;
 use jwt::{AlgorithmType, Header, SignWithKey, Token};
 use serde_json::{Number, Value};
 use sha2::Sha384;
