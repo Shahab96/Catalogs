@@ -1,6 +1,10 @@
 name: Build
 on:
-  - workflow_call
+  workflow_call:
+    inputs:
+      directory: 
+        type: string
+        required: true
 
 jobs:
   build:
@@ -10,14 +14,14 @@ jobs:
     - run: |
         pip install ziglang
         rustup toolchain install stable --profile minimal
-      working-directory: ${{ github.workflow }}
+      working-directory: ${{ inputs.directory }}
     - uses: Swatinem/rust-cache@v2
     - name: Build
       run: ./build
-      working-directory: ${{ github.workflow }}
+      working-directory: ${{ inputs.directory }}
     - name: Save Build
       uses: actions/upload-artifact@v3
       with:
         name: dist
-        path: ${{ github.workflow }}/dist
+        path: ${{ inputs.directory }}/dist
         retention-days: 1

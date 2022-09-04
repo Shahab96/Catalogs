@@ -1,0 +1,27 @@
+name: "Deploy"
+
+on:
+  push:
+    branches:
+    - main
+  pull_request:
+    branches:
+    - main
+
+jobs:
+  build:
+    matrix:
+      service: [rule, user, extraction]
+    uses: ./.github/workflows/build.yaml
+    with:
+      directory: ${{ matrix.service }}
+
+  dev:
+    needs: build
+    uses: ./.github/workflows/deploy-env.yaml
+    with:
+      stage: dev
+    secrets:
+      role: ${{ secrets.ROLE }}
+      gcp_identity_provider: ${{ secrets.GCP_PROVIDER }}
+      gcp_service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}

@@ -3,12 +3,12 @@ use serde_json::{Map, Value};
 use std::collections::HashMap;
 use std::error::Error;
 
-pub struct Parser {
+pub struct Extractor {
     rule: String,
     patterns: HashMap<String, String>,
 }
 
-impl Parser {
+impl Extractor {
     pub fn new(rule: String) -> Self {
         Self {
             rule,
