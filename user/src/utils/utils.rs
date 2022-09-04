@@ -3,8 +3,8 @@ use argon2::{
     Argon2,
 };
 use hmac::{Hmac, Mac};
-use jwt::{SignWithKey, AlgorithmType, Header, Token};
 use jwt::token::Signed;
+use jwt::{AlgorithmType, Header, SignWithKey, Token};
 use sha2::Sha384;
 use std::collections::BTreeMap;
 
@@ -28,7 +28,11 @@ pub fn verify_password(password: &str) -> bool {
     argon2.verify_password(password.as_bytes(), &hash).is_ok()
 }
 
-pub fn mint_token<'a> (access_secret: &'a str, sub: &'a str, tenant_id: &'a str) -> Result<Token<Header, BTreeMap<&'a str, &'a str>, Signed>, &'a str> {
+pub fn mint_token<'a>(
+    access_secret: &'a str,
+    sub: &'a str,
+    tenant_id: &'a str,
+) -> Result<Token<Header, BTreeMap<&'a str, &'a str>, Signed>, &'a str> {
     let key: Hmac<Sha384> = match Hmac::new_from_slice(access_secret.as_bytes()) {
         Ok(k) => k,
         Err(_) => return Err("Error signing JWT."),
