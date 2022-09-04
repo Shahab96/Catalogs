@@ -6,10 +6,6 @@ output "lambda" {
   value = aws_lambda_function.this
 }
 
-output "table" {
-  value = aws_dynamodb_table.this
-}
-
 output "role" {
   value = aws_iam_role.this
 }
