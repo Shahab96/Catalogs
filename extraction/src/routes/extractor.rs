@@ -4,7 +4,7 @@ use rocket::serde::json::Json;
 use serde_json::{Map, Value};
 
 use crate::model::event::EvaluationEvent;
-use crate::service::parser::Parser;
+use crate::service::extractor::Extractor;
 
 #[post("/evaluate", format = "json", data = "<message>")]
 pub async fn evaluate(message: Json<EvaluationEvent>) -> Result<Json<Map<String, Value>>, Status> {
