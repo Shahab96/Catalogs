@@ -4,9 +4,19 @@ on:
   push:
     branches:
     - main
+    paths:
+    - rule/**
+    - extraction/**
+    - user/**
+    - infrastructure/**
   pull_request:
     branches:
     - main
+    paths:
+    - rule/**
+    - extraction/**
+    - user/**
+    - infrastructure/**
 
 jobs:
   build:
