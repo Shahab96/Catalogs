@@ -1,3 +1,6 @@
 <p align="center">
-  <img src="https://github.com/Shahab96/Catalogs/blob/main/image.png?raw=true" />
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./image_darkmode.png">
+    <img alt="logo" src="./image_lightmode.png">
+  </picture>
 </p>
