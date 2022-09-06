@@ -12,11 +12,6 @@ variable "build_path" {
   description = "The path to the lambda function zip file"
 }
 
-variable "access_token_secret" {
-  type        = string
-  description = "The name of the secret containing the access token"
-}
-
 #--------------------------
 # Configurable variables
 #--------------------------

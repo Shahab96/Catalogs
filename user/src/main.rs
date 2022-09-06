@@ -10,26 +10,16 @@ use rocket::{self, routes};
 
 #[rocket::main]
 async fn main() -> Result<(), LambdaError> {
-    let access_token_secret = std::env::var("ACCESS_TOKEN_SECRET").unwrap();
-    let refresh_token_secret = std::env::var("REFRESH_TOKEN_SECRET").unwrap();
+    let rsa_key_secret = std::env::var("RSA_KEY_SECRET").unwrap();
     let table_name = std::env::var("TABLE_NAME").unwrap();
 
     let config = aws_config::load_from_env().await;
     let dynamo = aws_sdk_dynamodb::Client::new(&config);
     let secrets_manager = aws_sdk_secretsmanager::Client::new(&config);
 
-    let access_token = secrets_manager
+    let rsa_key = secrets_manager
         .get_secret_value()
-        .secret_id(access_token_secret)
-        .send()
-        .await
-        .unwrap()
-        .secret_string
-        .unwrap();
-
-    let refresh_token = secrets_manager
-        .get_secret_value()
-        .secret_id(refresh_token_secret)
+        .secret_id(rsa_key_secret)
         .send()
         .await
         .unwrap()
@@ -39,8 +29,7 @@ async fn main() -> Result<(), LambdaError> {
     let state = State {
         dynamo,
         table_name,
-        access_token,
-        refresh_token,
+        rsa_key,
     };
 
     let rocket = rocket::build()

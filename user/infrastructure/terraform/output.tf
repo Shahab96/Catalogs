@@ -17,11 +17,3 @@ output "role" {
 output "domain_name" {
   value = local.domain_name
 }
-
-output "access_token" {
-  value = aws_secretsmanager_secret_version.this["access"]
-}
-
-output "refresh_token" {
-  value = aws_secretsmanager_secret_version.this["refresh"]
-}

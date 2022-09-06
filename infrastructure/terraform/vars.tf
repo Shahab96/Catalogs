@@ -15,6 +15,11 @@ variable "gcp_region" {
 #--------------------------
 # Configurable variables
 #--------------------------
+variable "app_namespace" {
+  type = string
+  description = "The namespace to use for the application" 
+}
+
 variable "user_namespace" {
   type = string
   description = "The namespace to use for the user service"
@@ -33,3 +38,6 @@ variable "extraction_namespace" {
 #--------------------------
 # Interpolated values
 #--------------------------
+locals {
+  project_prefix = "${var.app_namespace}-${terraform.workspace}"
+}

@@ -46,8 +46,7 @@ data "aws_iam_policy_document" "this" {
       "secretsmanager:GetSecretValue",
     ]
     resources = [
-      aws_secretsmanager_secret.this["access"].arn,
-      aws_secretsmanager_secret.this["refresh"].arn,
+      aws_secretsmanager_secret.this.arn,
     ]
   }
 }

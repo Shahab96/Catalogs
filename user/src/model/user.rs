@@ -4,7 +4,7 @@ use rocket::State;
 use serde::Serialize;
 use uuid::Uuid;
 
-use crate::utils::utils::hash_password;
+use crate::utils::password::hash_password;
 use crate::model::state;
 
 #[derive(Debug, Serialize)]

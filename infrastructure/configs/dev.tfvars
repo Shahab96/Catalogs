@@ -1,3 +1,4 @@
+app_namespace = "Catalogs"
 user_namespace = "user"
 rule_namespace = "rule"
 extraction_namespace = "extraction"

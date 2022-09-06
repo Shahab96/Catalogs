@@ -8,7 +8,8 @@ use serde::Deserialize;
 use crate::model::user::User;
 use crate::model::tenant::Tenant;
 use crate::model::state;
-use crate::utils::utils::{verify_password, mint_token};
+use crate::utils::password::verify_password;
+use crate::utils::jwt::mint_rsa;
 
 #[derive(Deserialize)]
 pub struct ClientRequest<'a> {
@@ -52,7 +53,8 @@ pub async fn login<'a> (
         Ok(user) => {
             if verify_password(data.password) {
                 let tenant_id = user.attributes().unwrap().get("active_tenant").unwrap().as_s().unwrap();
-                let jwt = mint_token(&state.access_token, &data.email, &tenant_id).unwrap();
+                // let jwt = mint_token(&state.access_token, &data.email, &tenant_id).unwrap();
+                let jwt = mint_rsa(&state.rsa_key, &data.email, &tenant_id).unwrap();
                 
                 Ok(Accepted(Some(String::from(jwt.as_str()))))
             } else {
