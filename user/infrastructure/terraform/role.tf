@@ -47,6 +47,7 @@ data "aws_iam_policy_document" "this" {
     ]
     resources = [
       aws_secretsmanager_secret.this.arn,
+      data.aws_secretsmanager_secret.this.arn,
     ]
   }
 }

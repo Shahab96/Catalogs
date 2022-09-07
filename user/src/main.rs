@@ -1,9 +1,11 @@
 mod model;
 mod routes;
+mod service;
 mod utils;
 
-use crate::routes::user::{login, register};
 use crate::model::state::State;
+use crate::routes::oauth::oauth_login;
+use crate::routes::user::{login, register};
 
 use lambda_web::{is_running_on_lambda, launch_rocket_on_lambda, LambdaError};
 use rocket::{self, routes};
@@ -11,6 +13,7 @@ use rocket::{self, routes};
 #[rocket::main]
 async fn main() -> Result<(), LambdaError> {
     let rsa_key_secret = std::env::var("RSA_KEY_SECRET").unwrap();
+    let google_oauth_credentials_secret = std::env::var("GOOGLE_OAUTH_CREDENTIALS").unwrap();
     let table_name = std::env::var("TABLE_NAME").unwrap();
 
     let config = aws_config::load_from_env().await;
@@ -26,16 +29,28 @@ async fn main() -> Result<(), LambdaError> {
         .secret_string
         .unwrap();
 
+    let google_oauth_credentials = serde_json::from_str(
+        secrets_manager
+            .get_secret_value()
+            .secret_id(google_oauth_credentials_secret)
+            .send()
+            .await
+            .unwrap()
+            .secret_string()
+            .unwrap(),
+    )?;
+
     let state = State {
         dynamo,
         table_name,
         rsa_key,
+        google_oauth_credentials,
     };
 
     let rocket = rocket::build()
         .configure(rocket::Config::debug_default())
         .manage(state)
-        .mount("/", routes![register, login]);
+        .mount("/", routes![register, login, oauth_login]);
 
     if is_running_on_lambda() {
         // Launch on AWS Lambda

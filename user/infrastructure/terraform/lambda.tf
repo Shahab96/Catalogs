@@ -14,6 +14,8 @@ resource "aws_lambda_function" "this" {
       TABLE_NAME = aws_dynamodb_table.this.name
       RSA_KEY_SECRET = aws_secretsmanager_secret.this.arn
       DOMAIN_NAME = "https://${local.domain_name}/"
+      GOOGLE_OAUTH_CREDENTIALS = data.aws_secretsmanager_secret.this.arn
+      OAUTH_REDIRECT_URI = "https://${local.domain_name}/oauth2/authorization"
     }
   }
 

@@ -27,7 +27,7 @@ uuid = { version = "1.1.2", features = [
 ] }
 argon2 = "0.4"
 rand_core = { version = "0.6", features = ["std"] }
-jwt = "0.16.0"
-hmac = "0.12.1"
-sha2 = "0.10.5"
 jwt-simple = "0.11.0"
+reqwest = "0.11.11"
+urlencoding = "2.1.2"
+openssl = { version = "0.10.41", features = ["vendored"] }

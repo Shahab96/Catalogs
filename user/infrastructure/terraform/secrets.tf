@@ -8,3 +8,7 @@ resource "random_password" "this" {
 resource "aws_secretsmanager_secret" "this" {
   name = "${local.project_prefix}-rsa-key"
 }
+
+data "aws_secretsmanager_secret" "this" {
+  name = "google-oauth-credentials"
+}
