@@ -31,3 +31,4 @@ jwt-simple = "0.11.0"
 reqwest = "0.11.11"
 urlencoding = "2.1.2"
 openssl = { version = "0.10.41", features = ["vendored"] }
+alcoholic_jwt = "4091.0.0"

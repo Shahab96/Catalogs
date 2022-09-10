@@ -5,4 +5,5 @@ pub struct State {
     pub table_name: String,
     pub rsa_key: String,
     pub google_oauth_credentials: GoogleOAuthCredentials,
+    pub oauth_redirect_uri: String,
 }

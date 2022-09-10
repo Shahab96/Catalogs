@@ -22,7 +22,7 @@ pub async fn register(
     state: &State<state::State>,
     data: Json<ClientRequest<'_>>,
 ) -> Result<Created<()>, Custom<&'static str>> {
-    let user = User::new(data.email, data.password);
+    let user = User::new(data.email, Some(data.password));
     let result = User::create(&user, state).await;
 
     match result {
@@ -47,13 +47,13 @@ pub async fn login<'a> (
     state: &State<state::State>,
     data: Json<ClientRequest<'_>>,
 ) -> Result<Accepted<String>, Custom<&'a str>> {
-    let result = User::login(data.email, state).await;
+    let mut user = User::new(data.email, Some(data.password));
+    let result = User::login(&mut user, state).await;
 
     match result {
-        Ok(user) => {
+        Ok(()) => {
             if verify_password(data.password) {
-                let tenant_id = user.attributes().unwrap().get("active_tenant").unwrap().as_s().unwrap();
-                // let jwt = mint_token(&state.access_token, &data.email, &tenant_id).unwrap();
+                let tenant_id = &user.active_tenant;
                 let jwt = mint_rsa(&state.rsa_key, &data.email, &tenant_id).unwrap();
                 
                 Ok(Accepted(Some(String::from(jwt.as_str()))))
