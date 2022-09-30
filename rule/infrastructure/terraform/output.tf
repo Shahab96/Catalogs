@@ -17,3 +17,7 @@ output "role" {
 output "domain_name" {
   value = local.domain_name
 }
+
+output "zone" {
+  value = aws_route53_zone.this
+}

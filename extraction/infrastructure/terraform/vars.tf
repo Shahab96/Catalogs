@@ -15,10 +15,16 @@ variable "build_path" {
 #--------------------------
 # Configurable variables
 #--------------------------
+variable "dns_zone" {
+  type        = string
+  description = "The dns zone to use for the domain name"
+  default     = "dev.dogar.dev"
+}
 
 #--------------------------
 # Interpolated values
 #--------------------------
 locals {
   project_prefix = "${var.app_namespace}-${terraform.workspace}"
+  domain_name    = "${var.app_namespace}.${var.dns_zone}"
 }

@@ -3,7 +3,7 @@ mod routes;
 mod utils;
 
 use crate::model::state::State;
-use crate::routes::oauth::{oauth_login, oauth_authorization};
+use crate::routes::oauth::{oauth_authorization, oauth_login};
 use crate::routes::user::{login, register};
 
 use lambda_web::{is_running_on_lambda, launch_rocket_on_lambda, LambdaError};
@@ -51,7 +51,10 @@ async fn main() -> Result<(), LambdaError> {
     let rocket = rocket::build()
         .configure(rocket::Config::debug_default())
         .manage(state)
-        .mount("/", routes![register, login, oauth_login, oauth_authorization]);
+        .mount(
+            "/",
+            routes![register, login, oauth_login, oauth_authorization],
+        );
 
     if is_running_on_lambda() {
         // Launch on AWS Lambda
