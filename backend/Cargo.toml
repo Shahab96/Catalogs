@@ -1,0 +1,3 @@
+[workspace]
+
+members = ["user_service", "rule_service", "extraction_service"]

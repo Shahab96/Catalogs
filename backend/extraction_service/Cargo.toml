@@ -1,18 +1,18 @@
 [package]
-name = "extraction"
+name = "extraction_service"
 version = "0.1.0"
 edition = "2021"
 autobins = false
 
 [[bin]]
-name = "bootstrap"
+name = "extraction_service"
 path = "src/main.rs"
 
 [dependencies]
 regex = "1.6.0"
 serde = "1.0.143"
 serde_json = "1.0.83"
-aws-config = "0.47.0"
+aws-config = "0.48.0"
 derive_more = "0.99.17"
 lambda-web = { version = "0.2.0", features = ["rocket05"] }
 log = "0.4.17"

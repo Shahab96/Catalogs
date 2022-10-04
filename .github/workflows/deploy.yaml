@@ -5,40 +5,32 @@ on:
     branches:
     - main
     paths:
-    - rule/**
-    - extraction/**
-    - user/**
+    - backend/**
     - infrastructure/**
   pull_request:
     branches:
     - main
     paths:
-    - rule/**
-    - extraction/**
-    - user/**
+    - backend/**
     - infrastructure/**
 
 jobs:
   build:
-    strategy:
-      matrix:
-        service: [rule, user, extraction]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
     - run: |
         pip install ziglang
         rustup toolchain install stable --profile minimal
-      working-directory: ${{ matrix.service }}
+      working-directory: backend
     - uses: Swatinem/rust-cache@v2
     - name: Build
       run: ./build
-      working-directory: ${{ matrix.service }}
+      working-directory: backend
     - name: Save Build
       uses: actions/upload-artifact@v3
       with:
-        name: ${{ matrix.service }}
-        path: ${{ matrix.service }}/dist
+        path: build
         retention-days: 1
 
   dev:
