@@ -46,6 +46,6 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         path: ./build
-    - run: tree build
+    - run: mv build/artifacts/* build/
     - name: Deploy
       run: GOOGLE_APPLICATION_CREDENTIALS=${{ steps.gcp_auth.outputs.credentials_file_path }} ./scripts/deploy ${{ inputs.stage }}
