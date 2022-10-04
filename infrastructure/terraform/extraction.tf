@@ -1,5 +1,5 @@
 module "extraction_service" {
-  source = "../../extraction/infrastructure/terraform"
+  source = "../../backend/extraction_service/infrastructure/terraform"
 
   app_namespace = var.extraction_namespace
   build_path    = "../../build/extraction/lambda.zip"
