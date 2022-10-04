@@ -1,0 +1,12 @@
+#!/bin/bash
+
+rm -rf ../build
+mkdir -p ../build/{extraction_service,user_service,rule_service}
+
+cargo install cargo-lambda
+cargo lambda build --release --arm64 --output-format zip
+
+cp ./target/lambda/extraction_service/bootstrap.zip ../build/extraction_service/lambda.zip
+cp ./target/lambda/user_service/bootstrap.zip ../build/user_service/lambda.zip
+cp ./target/lambda/rule_service/bootstrap.zip ../build/rule_service/lambda.zip
+
