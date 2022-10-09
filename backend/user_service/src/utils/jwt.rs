@@ -1,4 +1,5 @@
 use alcoholic_jwt::{token_kid, validate, Validation, JWKS};
+use jwt::{Header, Token};
 use jwt_simple::algorithms::RS512KeyPair;
 use jwt_simple::prelude::{Claims, Duration, RSAKeyPairLike};
 use reqwest::ClientBuilder;
@@ -26,6 +27,13 @@ pub fn mint_rsa<'a>(
     Ok(key_pair.sign(claims)?)
 }
 
+pub fn get_claims(token: &str) -> Result<(String, String), Box<dyn std::error::Error>> {
+    let token: Token<Header, AuthClaims, _> = Token::parse_unverified(token)?;
+    let claims = token.claims();
+
+    Ok((claims.sub.to_owned(), claims.tid.to_owned()))
+}
+
 pub async fn verify_rsa<'a>(
     jwks_url: &'a str,
     token: &'a str,
@@ -40,7 +48,7 @@ pub async fn verify_rsa<'a>(
             .await?
             .as_str(),
     )?;
-    let kid = token_kid(token).unwrap().unwrap();
+    let kid = token_kid(token)?.unwrap();
     let jwk = jwks.find(kid.as_str()).unwrap();
 
     let validations = vec![Validation::NotExpired, Validation::SubjectPresent];

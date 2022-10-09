@@ -1,3 +1,4 @@
+mod guards;
 mod model;
 mod routes;
 mod utils;
@@ -24,18 +25,17 @@ async fn main() -> Result<(), LambdaError> {
         .get_secret_value()
         .secret_id(rsa_key_secret)
         .send()
-        .await
+        .await?
+        .secret_string()
         .unwrap()
-        .secret_string
-        .unwrap();
+        .to_owned();
 
     let google_oauth_credentials = serde_json::from_str(
         secrets_manager
             .get_secret_value()
             .secret_id(google_oauth_credentials_secret)
             .send()
-            .await
-            .unwrap()
+            .await?
             .secret_string()
             .unwrap(),
     )?;

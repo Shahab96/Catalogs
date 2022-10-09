@@ -8,8 +8,8 @@ use urlencoding::encode;
 
 use crate::model::oauth::GoogleOAuthTokenReponse;
 use crate::model::state;
-use crate::model::user::User;
 use crate::model::tenant::Tenant;
+use crate::model::user::User;
 use crate::utils::jwt::{mint_rsa, verify_rsa};
 
 #[get("/oauth2/login?<provider>")]
@@ -85,9 +85,11 @@ pub async fn oauth_authorization<'a>(
                     let mut user = User::new(email, None);
 
                     if result.is_none() {
-                        User::create(&user, app_state).await.unwrap();
-                        let tenant = Tenant::new(&user.email, &user.tenant_list.first().unwrap());
-                        Tenant::create(&tenant, app_state).await.unwrap();
+                        user.save(app_state).await.unwrap();
+                        let tenant = Tenant::new(&user.email, &user.tenant_list.first().unwrap())
+                            .save(app_state)
+                            .await
+                            .unwrap();
                     }
 
                     User::login(&mut user, app_state).await.unwrap();
@@ -99,7 +101,7 @@ pub async fn oauth_authorization<'a>(
                 Err(e) => {
                     println!("{}", e);
                     Err(Custom(Status::InternalServerError, "There was an error."))
-                },
+                }
             }
         }
         _ => Err(Custom(Status::NotImplemented, "Provider not implemented.")),
