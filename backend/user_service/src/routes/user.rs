@@ -1,6 +1,6 @@
 use aws_sdk_dynamodb::Error::ConditionalCheckFailedException;
 use rocket::http::Status;
-use rocket::response::status::{Accepted, Created, Custom};
+use rocket::response::status::Custom;
 use rocket::serde::json::Json;
 use rocket::{post, State};
 use serde::Deserialize;
@@ -8,7 +8,6 @@ use serde::Deserialize;
 // use crate::guards::user::AuthenticatedUser;
 // use crate::model::role::Role;
 use crate::model::state;
-use crate::model::tenant::Tenant;
 use crate::model::user::User;
 use crate::utils::jwt::mint_rsa;
 use crate::utils::password::verify_password;
@@ -19,78 +18,94 @@ pub struct ClientRequest<'a> {
     password: &'a str,
 }
 
-#[derive(Deserialize)]
-pub struct AddRolesRequest {
-    roles: Vec<String>,
-}
+// #[derive(Deserialize)]
+// pub struct AddRolesRequest {
+//     roles: Vec<String>,
+// }
 
 #[post("/register", data = "<data>", format = "json")]
 pub async fn register(
     state: &State<state::State>,
     data: Json<ClientRequest<'_>>,
-) -> Result<Created<()>, Custom<&'static str>> {
-    let mut user = User::new(data.email, Some(data.password));
+) -> Custom<&'static str> {
+    let user = User::new(data.email, data.password);
 
     match user.save(state).await {
-        Ok(user) => {
-            let tenant = Tenant::new(&user.email, &user.tenant_list.first().unwrap());
-            match Tenant::create(&tenant, state).await {
-                Ok(_) => Ok(Created::new("/")),
-                Err(_) => Err(Custom(
-                    Status::InternalServerError,
-                    "Error creating your account.",
-                )),
-            }
-        }
+        Ok(_) => Custom(Status::Created, "Created"),
         Err(err) => match err {
-            ConditionalCheckFailedException(_) => {
-                Err(Custom(Status::Conflict, "User already exists."))
-            }
-            _ => Err(Custom(Status::InternalServerError, "Internal Server Error")),
+            ConditionalCheckFailedException(_) => Custom(Status::Conflict, "User already exists."),
+            _ => Custom(Status::InternalServerError, "Internal Server Error"),
         },
     }
 }
 
 #[post("/login", data = "<data>", format = "json")]
-pub async fn login<'a>(
-    state: &State<state::State>,
-    data: Json<ClientRequest<'_>>,
-) -> Result<Accepted<String>, Custom<&'a str>> {
-    let mut user = User::new(data.email, Some(data.password));
-    let result = User::login(&mut user, state).await;
+pub async fn login(state: &State<state::State>, data: Json<ClientRequest<'_>>) -> Custom<String> {
+    let user = User::fetch(data.email, state).await;
 
-    match result {
-        Ok(()) => {
-            if verify_password(data.password) {
-                let tenant_id = &user.active_tenant;
-                let jwt = mint_rsa(&state.rsa_key, &data.email, &tenant_id).unwrap();
+    match user {
+        Ok(Some(mut user)) => {
+            if verify_password(data.password, user.hashed_password.as_str()) {
+                let jwt = mint_rsa(&state.rsa_key, &user.email, &user.email);
+                if !jwt.is_ok() {
+                    return Custom(
+                        Status::InternalServerError,
+                        String::from("If you're seeing this message, you fucked up. The JWT minter is broken."),
+                    );
+                }
 
-                Ok(Accepted(Some(String::from(jwt.as_str()))))
+                user.login(state).await.unwrap();
+                Custom(Status::Ok, jwt.unwrap())
             } else {
-                Err(Custom(Status::Unauthorized, "Incorrect email or password."))
+                Custom(
+                    Status::BadRequest,
+                    String::from(
+                        "The provided email address and password combination is incorrect.",
+                    ),
+                )
             }
         }
-        Err(err) => match err {
-            ConditionalCheckFailedException(_) => {
-                Err(Custom(Status::NotFound, "Incorrect email or password."))
-            }
-            _ => Err(Custom(Status::InternalServerError, "Internal Server Error")),
-        },
+        Ok(None) => Custom(
+            Status::BadRequest,
+            String::from("The provided email address and password combination is incorrect."),
+        ),
+        Err(_) => Custom(
+            Status::InternalServerError,
+            String::from("Internal Server Error"),
+        ),
     }
+
+    // if let Ok(mut user) = user {
+    //     if verify_password(data.password, user.hashed_password.as_str()) {
+    //         let jwt = mint_rsa(&state.rsa_key, &data.email, &user.email);
+    //         if !jwt.is_ok() {
+    //             return Custom(
+    //                 Status::InternalServerError,
+    //                 String::from(
+    //                     "If you're seeing this message, you fucked up. The JWT minter is broken.",
+    //                 ),
+    //             );
+    //         }
+
+    //         Custom(Status::Ok, jwt.unwrap())
+    //     }
+    // } else {
+    //     println!("If you're seeing this message, you fucked up. A user login failed somehow.");
+    //     Custom(
+    //         Status::InternalServerError,
+    //         String::from("Internal Server Error"),
+    //     )
+    // }
+    //     } else {
+    //         Custom(
+    //             Status::Unauthorized,
+    //             String::from("Incorrect email or password."),
+    //         )
+    //     }
+    // } else {
+    //     Custom(
+    //         Status::InternalServerError,
+    //         String::from("Internal Server Error"),
+    //     )
+    // }
 }
-
-// #[post("/addRoles", data = "<data>", format = "json")]
-// pub async fn add_roles<'a>(
-//     state: &State<state::State>,
-//     data: Json<AddRolesRequest>,
-//     authenticated_user: AuthenticatedUser<'_>,
-// ) -> Custom<&'a str> {
-//     let tenant_id = authenticated_user.tenant_id;
-//     if let Ok(Some(user)) = User::get(authenticated_user.email, state).await {
-//         for role in data.roles.iter() {
-//             user.roles.insert(tenant_id)
-//         }
-//     }
-
-//     Custom(Status::Ok, "Added roles.")
-// }

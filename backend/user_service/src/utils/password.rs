@@ -15,10 +15,12 @@ pub fn hash_password(password: &str) -> String {
         .to_string()
 }
 
-pub fn verify_password(password: &str) -> bool {
+pub fn verify_password(password: &str, hashed_password: &str) -> bool {
     let argon2 = Argon2::default();
     let salt = SaltString::generate(&mut OsRng);
     let hash = argon2.hash_password(password.as_bytes(), &salt).unwrap();
 
-    argon2.verify_password(password.as_bytes(), &hash).is_ok()
+    argon2
+        .verify_password(hashed_password.as_bytes(), &hash)
+        .is_ok()
 }

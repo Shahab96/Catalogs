@@ -1,6 +1,6 @@
 use reqwest::ClientBuilder;
 use rocket::http::Status;
-use rocket::response::status::{Accepted, Custom};
+use rocket::response::status::Custom;
 use rocket::response::Redirect;
 use rocket::{get, State};
 use std::time::SystemTime;
@@ -8,7 +8,6 @@ use urlencoding::encode;
 
 use crate::model::oauth::GoogleOAuthTokenReponse;
 use crate::model::state;
-use crate::model::tenant::Tenant;
 use crate::model::user::User;
 use crate::utils::jwt::{mint_rsa, verify_rsa};
 
@@ -42,9 +41,9 @@ pub async fn oauth_authorization<'a>(
     state: Option<&'a str>,
     error: Option<&'a str>,
     app_state: &State<state::State>,
-) -> Result<Accepted<String>, Custom<&'a str>> {
+) -> Custom<String> {
     if let Some(error) = error {
-        return Err(Custom(Status::BadRequest, error));
+        return Custom(Status::BadRequest, error.to_owned());
     }
 
     let client = ClientBuilder::new().build().unwrap();
@@ -80,30 +79,28 @@ pub async fn oauth_authorization<'a>(
 
             let email = &email_raw[1..email_raw.len() - 1];
 
-            match User::get(email, &app_state).await {
-                Ok(result) => {
-                    let mut user = User::new(email, None);
-
-                    if result.is_none() {
-                        user.save(app_state).await.unwrap();
-                        let tenant = Tenant::new(&user.email, &user.tenant_list.first().unwrap())
-                            .save(app_state)
-                            .await
-                            .unwrap();
-                    }
+            match User::fetch(email, &app_state).await {
+                Ok(mut user) => {
+                    user.save(app_state).await.unwrap();
 
                     User::login(&mut user, app_state).await.unwrap();
 
-                    let token = mint_rsa(&app_state.rsa_key, email, &user.active_tenant).unwrap();
+                    let token = mint_rsa(&app_state.rsa_key, email, &user.email).unwrap();
 
-                    Ok(Accepted(Some(token)))
+                    Custom(Status::Ok, token)
                 }
                 Err(e) => {
                     println!("{}", e);
-                    Err(Custom(Status::InternalServerError, "There was an error."))
+                    Custom(
+                        Status::InternalServerError,
+                        String::from("There was an error."),
+                    )
                 }
             }
         }
-        _ => Err(Custom(Status::NotImplemented, "Provider not implemented.")),
+        _ => Custom(
+            Status::NotImplemented,
+            String::from("Provider not implemented."),
+        ),
     }
 }
