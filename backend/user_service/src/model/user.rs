@@ -26,7 +26,7 @@ impl User {
         let hashed_password = hashed_password.to_owned();
         let email = email.to_owned();
         let roles = vec![String::from("admin"), String::from("root")];
-        let active = true;
+        let active = false;
 
         Self {
             pk,
@@ -38,10 +38,8 @@ impl User {
         }
     }
 
-    pub async fn save(&self, state: &State<state::State>) -> Result<(), Error> {
-        self.marshall().save(state).await?;
-
-        Ok(())
+    pub async fn save(&self, state: &State<state::State>) -> bool {
+        self.marshall().save(state).await
     }
 
     pub async fn fetch(email: &str, state: &State<state::State>) -> Result<Option<Self>, Error> {
@@ -53,14 +51,9 @@ impl User {
         }
     }
 
-    pub async fn login<'a>(
-        &'a mut self,
-        state: &State<state::State>,
-    ) -> Result<&'a mut Self, Error> {
+    pub fn login<'a>(&'a mut self) -> &'a mut Self {
         self.active = true;
 
-        self.save(state).await?;
-
-        Ok(self)
+        self
     }
 }

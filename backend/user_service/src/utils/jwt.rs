@@ -11,20 +11,31 @@ struct AuthClaims {
     tid: String,
 }
 
-pub fn mint_rsa<'a>(
-    rsa_key: &'a String,
-    sub: &'a str,
-    tid: &'a str,
-) -> Result<String, Box<dyn std::error::Error>> {
-    let key_pair = RS512KeyPair::from_pem(&rsa_key.as_str())?;
+pub fn mint_rsa<'a>(rsa_key: &'a String, sub: &'a str, tid: &'a str) -> String {
+    let key_pair = match RS512KeyPair::from_pem(&rsa_key.as_str()) {
+        Ok(kp) => kp,
+        Err(_) => panic!("If you're seeing this message, you fucked up. The RSA private key we use to mint JWTs was not read."),
+    };
+
+    let domain_name = match std::env::var("DOMAIN_NAME") {
+        Ok(name) => name,
+        Err(_) => panic!("If you're seeing this message, you fucked up. The DOMAIN_NAME environment variable was not set."),
+    };
+
     let auth_claims = AuthClaims {
         sub: String::from(sub),
         tid: String::from(tid),
     };
-    let claims = Claims::with_custom_claims(auth_claims, Duration::from_mins(5))
-        .with_issuer(std::env::var("DOMAIN_NAME").unwrap());
+    let claims =
+        Claims::with_custom_claims(auth_claims, Duration::from_mins(5)).with_issuer(domain_name);
 
-    Ok(key_pair.sign(claims)?)
+    match key_pair.sign(claims) {
+        Ok(token) => token,
+        Err(e) => panic!(
+            "If you're seeing this message, you fucked up. Signing a JWT failed. Error: {}",
+            e
+        ),
+    }
 }
 
 pub fn get_claims(token: &str) -> Result<(String, String), Box<dyn std::error::Error>> {

@@ -34,8 +34,8 @@ impl MarshalledUser {
         }
     }
 
-    pub async fn save(&self, state: &State<state::State>) -> Result<(), Error> {
-        state
+    pub async fn save(&self, state: &State<state::State>) -> bool {
+        let result = state
             .dynamo
             .put_item()
             .table_name(&state.table_name)
@@ -45,11 +45,19 @@ impl MarshalledUser {
             .item("hashed_password", self.hashed_password.to_owned())
             .item("roles", self.roles.to_owned())
             .item("active", self.active.to_owned())
-            .condition_expression("attribute_not_exists(pk) and attribute_not_exists(sk)")
             .send()
-            .await?;
+            .await;
 
-        Ok(())
+        match result {
+            Ok(_) => true,
+            Err(e) => {
+                println!(
+                    "If you're seeing this message, you may have fucked up. {:?}",
+                    e
+                );
+                false
+            }
+        }
     }
 
     pub async fn fetch(

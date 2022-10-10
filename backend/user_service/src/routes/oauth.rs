@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use reqwest::ClientBuilder;
 use rocket::http::Status;
 use rocket::response::status::Custom;
@@ -79,16 +81,18 @@ pub async fn oauth_authorization<'a>(
 
             let email = &email_raw[1..email_raw.len() - 1];
 
-            match User::fetch(email, &app_state).await {
-                Ok(mut user) => {
-                    user.save(app_state).await.unwrap();
-
-                    User::login(&mut user, app_state).await.unwrap();
-
-                    let token = mint_rsa(&app_state.rsa_key, email, &user.email).unwrap();
-
-                    Custom(Status::Ok, token)
+            match User::fetch(email, app_state).await {
+                Ok(Some(mut user)) => {
+                    let token = mint_rsa(&app_state.rsa_key, email, &user.email);
+                    if user.login().save(app_state).await {
+                        Custom(Status::Ok, token)
+                    } else {
+                        Custom(Status::Forbidden, String::from("We were not able to authenticate you."))
+                    }
                 }
+                Ok(None) => {
+                    Custom(Status::BadRequest, String::from("You must create an account before you can login with a third party identity provider."))
+                },
                 Err(e) => {
                     println!("{}", e);
                     Custom(
