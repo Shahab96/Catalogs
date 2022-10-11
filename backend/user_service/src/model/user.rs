@@ -7,10 +7,8 @@ use crate::model::state;
 
 #[derive(Debug, Serialize)]
 pub struct User {
-    pub pk: String,
-    pub sk: String,
     pub email: String,
-    pub active: bool,
+    pub tenant: String,
     pub hashed_password: String,
     pub roles: Vec<String>,
 }
@@ -21,20 +19,16 @@ impl User {
     }
 
     pub fn new(email: &str, hashed_password: &str) -> Self {
-        let pk = format!("U#{}", email);
-        let sk = format!("T#{}", email);
         let hashed_password = hashed_password.to_owned();
         let email = email.to_owned();
         let roles = vec![String::from("admin"), String::from("root")];
-        let active = false;
+        let tenant = email.to_owned();
 
         Self {
-            pk,
-            sk,
+            email,
+            tenant,
             hashed_password,
             roles,
-            email,
-            active,
         }
     }
 
@@ -52,7 +46,13 @@ impl User {
     }
 
     pub fn login<'a>(&'a mut self) -> &'a mut Self {
-        self.active = true;
+        self.tenant = self.email.to_owned();
+
+        self
+    }
+
+    pub fn update_roles<'a>(&'a mut self, roles: &Vec<String>) -> &'a mut Self {
+        self.roles = roles.to_owned();
 
         self
     }

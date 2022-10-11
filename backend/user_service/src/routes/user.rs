@@ -4,6 +4,7 @@ use rocket::serde::json::Json;
 use rocket::{post, State};
 use serde::Deserialize;
 
+use crate::guards::user::AuthenticatedUser;
 use crate::model::state;
 use crate::model::user::User;
 use crate::utils::jwt::mint_rsa;
@@ -13,6 +14,11 @@ use crate::utils::password::{hash_password, verify_password};
 pub struct ClientRequest<'a> {
     email: &'a str,
     password: &'a str,
+}
+
+#[derive(Deserialize)]
+pub struct UpdateRolesRequest {
+    roles: Vec<String>,
 }
 
 #[post("/register", data = "<data>", format = "json")]
@@ -63,4 +69,26 @@ pub async fn login(state: &State<state::State>, data: Json<ClientRequest<'_>>) -
         ),
         Err(e) => panic!("If you're seeing this message, you fucked up. Reading a user from the database failed. Error: {:?}", e),
     }
+}
+
+#[post("/updateRoles", data = "<data>", format = "json")]
+pub async fn update_roles(
+    state: &State<state::State>,
+    data: Json<UpdateRolesRequest>,
+    auth: AuthenticatedUser,
+) -> Custom<String> {
+    let email = auth.email;
+    let tenant = auth.tenant;
+
+    match User::fetch(&email, state).await {
+        Ok(Some(mut user)) => {
+            user.update_roles(&data.roles).save(state).await;
+            return Custom(Status::Ok, String::from("Updated."))
+        },
+        Ok(None) => {
+            println!("If you're seeing this message, you fucked up. There's a security hole that let somebody modify roles for a user that doesn't exist, or with a forged auth token. sub: {}, tid: {}", email, tenant);
+            return Custom(Status::Forbidden, String::from("Forbidden"));
+        },
+        Err(e) => panic!("If you're seeing this message, you fucked up. There was an issue reading data from the database. {}", e)
+    };
 }

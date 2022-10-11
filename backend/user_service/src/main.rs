@@ -4,8 +4,8 @@ mod routes;
 mod utils;
 
 use crate::model::state::State;
-// use crate::routes::oauth::{oauth_authorization, oauth_login};
-use crate::routes::user::{login, register};
+use crate::routes::oauth::{oauth_authorization, oauth_login};
+use crate::routes::user::{login, register, update_roles};
 
 use lambda_web::{is_running_on_lambda, launch_rocket_on_lambda, LambdaError};
 use rocket::{self, routes};
@@ -54,9 +54,11 @@ async fn main() -> Result<(), LambdaError> {
         .mount(
             "/",
             routes![
-                register, login,
-                // oauth_login,
-                //oauth_authorization,
+                register,
+                login,
+                update_roles,
+                oauth_login,
+                oauth_authorization,
             ],
         );
 
