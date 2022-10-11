@@ -21,7 +21,7 @@ pub struct UpdateRolesRequest {
     roles: Vec<String>,
 }
 
-#[post("/register", data = "<data>", format = "json")]
+#[post("/Register", data = "<data>", format = "json")]
 pub async fn register(
     state: &State<state::State>,
     data: Json<ClientRequest<'_>>,
@@ -38,7 +38,7 @@ pub async fn register(
     }
 }
 
-#[post("/login", data = "<data>", format = "json")]
+#[post("/Login", data = "<data>", format = "json")]
 pub async fn login(state: &State<state::State>, data: Json<ClientRequest<'_>>) -> Custom<String> {
     let user = User::fetch(data.email, state).await;
 
@@ -71,7 +71,7 @@ pub async fn login(state: &State<state::State>, data: Json<ClientRequest<'_>>) -
     }
 }
 
-#[post("/updateRoles", data = "<data>", format = "json")]
+#[post("/UpdateRoles", data = "<data>", format = "json")]
 pub async fn update_roles(
     state: &State<state::State>,
     data: Json<UpdateRolesRequest>,
