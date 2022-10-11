@@ -64,13 +64,14 @@ impl MarshalledUser {
         email: &str,
         state: &State<state::State>,
     ) -> Result<Option<MarshalledUser>, Error> {
-        let key = AttributeValue::S(format!("U#{}", email));
+        let pk = AttributeValue::S(format!("U#{}", email));
+        let sk = AttributeValue::S(format!("T#{}", email));
         let marshalled_user = state
             .dynamo
             .get_item()
             .table_name(&state.table_name)
-            .key("pk", key.clone())
-            .key("sk", key)
+            .key("pk", pk)
+            .key("sk", sk)
             .send()
             .await?;
 

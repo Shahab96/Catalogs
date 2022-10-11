@@ -58,9 +58,9 @@ pub async fn login(state: &State<state::State>, data: Json<ClientRequest<'_>>) -
             }
         },
         Ok(None) => Custom(
-                Status::BadRequest,
-                String::from("The provided email address and password combination is incorrect."),
-            ),
+            Status::BadRequest,
+            String::from("The provided email address and password combination is incorrect."),
+        ),
         Err(e) => panic!("If you're seeing this message, you fucked up. Reading a user from the database failed. Error: {:?}", e),
     }
 }
