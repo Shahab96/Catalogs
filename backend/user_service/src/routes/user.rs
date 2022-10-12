@@ -1,15 +1,14 @@
-use aws_sdk_dynamodb::Error::ConditionalCheckFailedException;
 use rocket::http::Status;
-use rocket::response::status::{Accepted, Created, Custom};
+use rocket::response::status::Custom;
 use rocket::serde::json::Json;
 use rocket::{post, State};
 use serde::Deserialize;
 
-use crate::model::user::User;
-use crate::model::tenant::Tenant;
+use crate::guards::user::AuthenticatedUser;
 use crate::model::state;
-use crate::utils::password::verify_password;
+use crate::model::user::User;
 use crate::utils::jwt::mint_rsa;
+use crate::utils::password::{hash_password, verify_password};
 
 #[derive(Deserialize)]
 pub struct ClientRequest<'a> {
@@ -17,53 +16,79 @@ pub struct ClientRequest<'a> {
     password: &'a str,
 }
 
-#[post("/register", data = "<data>", format = "json")]
+#[derive(Deserialize)]
+pub struct UpdateRolesRequest {
+    roles: Vec<String>,
+}
+
+#[post("/Register", data = "<data>", format = "json")]
 pub async fn register(
     state: &State<state::State>,
     data: Json<ClientRequest<'_>>,
-) -> Result<Created<()>, Custom<&'static str>> {
-    let user = User::new(data.email, Some(data.password));
-    let result = User::create(&user, state).await;
+) -> Custom<&'static str> {
+    let user = match User::fetch(data.email, state).await {
+        Ok(Some(_)) => return Custom(Status::Conflict, "User already exists."),
+        Ok(None) => User::new(data.email, &hash_password(data.password)),
+        Err(e) => panic!("If you're seeing this message, you fucked up. Reading a user from the database failed: {:?}", e),
+    };
 
-    match result {
-        Ok(_) => {
-            let tenant = Tenant::new(&user.email, &user.tenant_list.first().unwrap());
-            match Tenant::create(&tenant, state).await {
-                Ok(_) => Ok(Created::new("/")),
-                Err(_) => Err(Custom(Status::InternalServerError, "Error creating your account.")),
-            }
-        },
-        Err(err) => match err {
-            ConditionalCheckFailedException(_) => {
-                Err(Custom(Status::Conflict, "User already exists."))
-            }
-            _ => Err(Custom(Status::InternalServerError, "Internal Server Error")),
-        },
+    match user.save(state).await {
+        true => Custom(Status::Created, "Created"),
+        false => Custom(Status::InternalServerError, "Internal Server Error"),
     }
 }
 
-#[post("/login", data = "<data>", format = "json")]
-pub async fn login<'a> (
-    state: &State<state::State>,
-    data: Json<ClientRequest<'_>>,
-) -> Result<Accepted<String>, Custom<&'a str>> {
-    let mut user = User::new(data.email, Some(data.password));
-    let result = User::login(&mut user, state).await;
+#[post("/Login", data = "<data>", format = "json")]
+pub async fn login(state: &State<state::State>, data: Json<ClientRequest<'_>>) -> Custom<String> {
+    let user = User::fetch(data.email, state).await;
 
-    match result {
-        Ok(()) => {
-            if verify_password(data.password) {
-                let tenant_id = &user.active_tenant;
-                let jwt = mint_rsa(&state.rsa_key, &data.email, &tenant_id).unwrap();
-                
-                Ok(Accepted(Some(String::from(jwt.as_str()))))
+    match user {
+        Ok(Some(mut user)) => {
+            if verify_password(data.password, user.hashed_password.as_str()) {
+                let jwt = mint_rsa(&state.rsa_key, &user.email, &user.email);
+
+                match user.login().save(state).await {
+                    true => Custom(Status::Ok, jwt),
+                    false => Custom(
+                        Status::InternalServerError,
+                        String::from("Internal server error"),
+                    ),
+                }
             } else {
-                Err(Custom(Status::Unauthorized, "Incorrect email or password."))
+                Custom(
+                    Status::BadRequest,
+                    String::from(
+                        "The provided email address and password combination is incorrect.",
+                    ),
+                )
             }
         },
-        Err(err) => match err {
-            ConditionalCheckFailedException(_) => Err(Custom(Status::NotFound, "Incorrect email or password.")),
-            _ => Err(Custom(Status::InternalServerError, "Internal Server Error")),
-        },
+        Ok(None) => Custom(
+            Status::BadRequest,
+            String::from("The provided email address and password combination is incorrect."),
+        ),
+        Err(e) => panic!("If you're seeing this message, you fucked up. Reading a user from the database failed. Error: {:?}", e),
     }
+}
+
+#[post("/UpdateRoles", data = "<data>", format = "json")]
+pub async fn update_roles(
+    state: &State<state::State>,
+    data: Json<UpdateRolesRequest>,
+    auth: AuthenticatedUser,
+) -> Custom<String> {
+    let email = auth.email;
+    let tenant = auth.tenant;
+
+    match User::fetch(&email, state).await {
+        Ok(Some(mut user)) => {
+            user.update_roles(&data.roles).save(state).await;
+            return Custom(Status::Ok, String::from("Updated."))
+        },
+        Ok(None) => {
+            println!("If you're seeing this message, you fucked up. There's a security hole that let somebody modify roles for a user that doesn't exist, or with a forged auth token. sub: {}, tid: {}", email, tenant);
+            return Custom(Status::Forbidden, String::from("Forbidden"));
+        },
+        Err(e) => panic!("If you're seeing this message, you fucked up. There was an issue reading data from the database. {}", e)
+    };
 }

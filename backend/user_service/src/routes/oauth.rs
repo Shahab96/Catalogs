@@ -1,6 +1,8 @@
+#![allow(dead_code)]
+
 use reqwest::ClientBuilder;
 use rocket::http::Status;
-use rocket::response::status::{Accepted, Custom};
+use rocket::response::status::Custom;
 use rocket::response::Redirect;
 use rocket::{get, State};
 use std::time::SystemTime;
@@ -9,7 +11,6 @@ use urlencoding::encode;
 use crate::model::oauth::GoogleOAuthTokenReponse;
 use crate::model::state;
 use crate::model::user::User;
-use crate::model::tenant::Tenant;
 use crate::utils::jwt::{mint_rsa, verify_rsa};
 
 #[get("/oauth2/login?<provider>")]
@@ -42,9 +43,9 @@ pub async fn oauth_authorization<'a>(
     state: Option<&'a str>,
     error: Option<&'a str>,
     app_state: &State<state::State>,
-) -> Result<Accepted<String>, Custom<&'a str>> {
+) -> Custom<String> {
     if let Some(error) = error {
-        return Err(Custom(Status::BadRequest, error));
+        return Custom(Status::BadRequest, error.to_owned());
     }
 
     let client = ClientBuilder::new().build().unwrap();
@@ -80,28 +81,30 @@ pub async fn oauth_authorization<'a>(
 
             let email = &email_raw[1..email_raw.len() - 1];
 
-            match User::get(email, &app_state).await {
-                Ok(result) => {
-                    let mut user = User::new(email, None);
-
-                    if result.is_none() {
-                        User::create(&user, app_state).await.unwrap();
-                        let tenant = Tenant::new(&user.email, &user.tenant_list.first().unwrap());
-                        Tenant::create(&tenant, app_state).await.unwrap();
+            match User::fetch(email, app_state).await {
+                Ok(Some(mut user)) => {
+                    let token = mint_rsa(&app_state.rsa_key, email, &user.email);
+                    if user.login().save(app_state).await {
+                        Custom(Status::Ok, token)
+                    } else {
+                        Custom(Status::Forbidden, String::from("We were not able to authenticate you."))
                     }
-
-                    User::login(&mut user, app_state).await.unwrap();
-
-                    let token = mint_rsa(&app_state.rsa_key, email, &user.active_tenant).unwrap();
-
-                    Ok(Accepted(Some(token)))
                 }
+                Ok(None) => {
+                    Custom(Status::BadRequest, String::from("You must create an account before you can login with a third party identity provider."))
+                },
                 Err(e) => {
                     println!("{}", e);
-                    Err(Custom(Status::InternalServerError, "There was an error."))
-                },
+                    Custom(
+                        Status::InternalServerError,
+                        String::from("There was an error."),
+                    )
+                }
             }
         }
-        _ => Err(Custom(Status::NotImplemented, "Provider not implemented.")),
+        _ => Custom(
+            Status::NotImplemented,
+            String::from("Provider not implemented."),
+        ),
     }
 }

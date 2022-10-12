@@ -1,10 +1,11 @@
+mod guards;
 mod model;
 mod routes;
 mod utils;
 
 use crate::model::state::State;
 use crate::routes::oauth::{oauth_authorization, oauth_login};
-use crate::routes::user::{login, register};
+use crate::routes::user::{login, register, update_roles};
 
 use lambda_web::{is_running_on_lambda, launch_rocket_on_lambda, LambdaError};
 use rocket::{self, routes};
@@ -24,18 +25,17 @@ async fn main() -> Result<(), LambdaError> {
         .get_secret_value()
         .secret_id(rsa_key_secret)
         .send()
-        .await
+        .await?
+        .secret_string()
         .unwrap()
-        .secret_string
-        .unwrap();
+        .to_owned();
 
     let google_oauth_credentials = serde_json::from_str(
         secrets_manager
             .get_secret_value()
             .secret_id(google_oauth_credentials_secret)
             .send()
-            .await
-            .unwrap()
+            .await?
             .secret_string()
             .unwrap(),
     )?;
@@ -53,7 +53,13 @@ async fn main() -> Result<(), LambdaError> {
         .manage(state)
         .mount(
             "/",
-            routes![register, login, oauth_login, oauth_authorization],
+            routes![
+                register,
+                login,
+                update_roles,
+                oauth_login,
+                oauth_authorization,
+            ],
         );
 
     if is_running_on_lambda() {
