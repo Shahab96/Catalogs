@@ -3,6 +3,7 @@
 SERVICE_NAME=$1
 STAGE=$2
 
+cd backend
 ./build
 
-aws lambda update-function-code --function-name $1-$2 --zip-file fileb://dist/lambda.zip
+aws lambda update-function-code --function-name $1-$2 --zip-file fileb://../build/$1/lambda.zip

@@ -80,10 +80,11 @@ pub async fn oauth_authorization<'a>(
                 .unwrap();
 
             let email = &email_raw[1..email_raw.len() - 1];
+            println!("Email: {}", email);
 
             match User::fetch(email, app_state).await {
                 Ok(Some(mut user)) => {
-                    let token = mint_rsa(&app_state.rsa_key, email, &user.email);
+                    let token = mint_rsa(&app_state.rsa_key, email, email);
                     if user.login().save(app_state).await {
                         Custom(Status::Ok, token)
                     } else {
@@ -94,7 +95,7 @@ pub async fn oauth_authorization<'a>(
                     Custom(Status::BadRequest, String::from("You must create an account before you can login with a third party identity provider."))
                 },
                 Err(e) => {
-                    println!("{}", e);
+                    println!("If you're seeing this message, you fucked up. Oauth login flow failed for user {}, {}", email, e);
                     Custom(
                         Status::InternalServerError,
                         String::from("There was an error."),
